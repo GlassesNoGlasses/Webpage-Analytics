@@ -1,0 +1,41 @@
+{
+    "name": "Chrome Webpage Analyics",
+    "description": "Description Here",
+    "version": "1.0",
+    "manifest_version": 3,
+    "action": {
+        "default_popup": "popup.html"
+    },
+    "icons": {
+        "16": "/Images/get_started16.png",
+        "32": "/Images/get_started32.png",
+        "48": "/Images/get_started48.png",
+        "128": "/Images/get_started48.png"
+    },
+    "background": {
+        "service_worker": "background.js",
+        "type": "module"
+      },
+    "content_scripts": [
+        {
+            "matches": [
+                "<all_urls>"
+            ],
+            "css": [
+                "my-styles.css"
+            ],
+            "js": [
+                "content.js"
+            ]
+        }
+    ],
+    "permissions": [
+        "activeTab",
+        "background",
+        "storage",
+        "scripting",
+        "tabs",
+        "alarms",
+        "notifications"
+    ]
+}

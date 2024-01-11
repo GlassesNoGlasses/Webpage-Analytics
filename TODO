@@ -1,0 +1,20 @@
+
+all
+1. blocked websites list
+2. Create personal settings for popup
+DONE 3. Create Debugger functions
+4. Migrate content.js
+5. Figure out how to store weekly/monthly analytics data
+
+
+background.js
+1. Set up objects and storage for websites
+    a. Get current tabs
+    b. Monitor tab changes.
+    c. Update endtimes of active tabs.
+
+
+TO PONDER:
+1. Should content connect to storage or send messages to background.js?
+ANSWER: Remove content script; not needed; just use tab change.
+

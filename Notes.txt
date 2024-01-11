@@ -1,0 +1,7 @@
+
+How to update active tab
+
+Case 1: no active tab set in DateAnalytic class
+
+- 
+
