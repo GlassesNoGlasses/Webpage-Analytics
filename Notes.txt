@@ -3,5 +3,8 @@ How to update active tab
 
 Case 1: no active tab set in DateAnalytic class
 
-- 
+- Set active web var in Date Analytic class
+- Add new website to Date Analytic (checking if website has been visited earlier in the day)
+
+
 

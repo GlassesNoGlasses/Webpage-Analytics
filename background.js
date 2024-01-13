@@ -1,5 +1,5 @@
 
-import { WebsiteAnalytic, DateAnalytic, webConstants } from "./constants";
+import { WebsiteAnalytic, DateAnalytic, webConstants } from "./constants.js";
 
 console.log("hiii");
 
@@ -37,7 +37,7 @@ const SetToLocal = (localKey, val) => {
             console.log("Key: ", localKey, " is set to Value: ", val);
             return true;
         };
-      });
+    });
 };
 
 // Get from local storage of key "localKey"
@@ -52,26 +52,15 @@ const GetFromLocal = async (localKey) => {
     return dateAnalyticData;
 };
 
-const UpdateActiveWebsiteTime = async (activeWebUrl) => {
+
+const UpdateActiveWebsiteTime = (activeWebUrl) => {
     const webDom = GetDomName(activeWebUrl);
-    const currActiveWebsite = new WebsiteAnalytic(webDom, new Date().getTime());
-    const prevActiveWebsite = todayAnalytic.GetWebsite(todayAnalytic.activeWebsiteDom);
+    const currTime = new Date().getTime();
 
-    // If a new website visited
-    if (!todayAnalytic.GetWebsite(currActiveWebsite)) {
-        if (prevActiveWebsite) {
-            
-        }
-
-    };
-
-    if (todayAnalytic.activeWebsiteDom && todayAnalytic.activeWebsiteDom.localeCompare(webDom) !== 0) {
-        todayAnalytic.
-
-        todayAnalytic.AddWebsite(new WebsiteAnalytic(webDom));
-
-    };
-}
+    todayAnalytic.UpdateActiveWebsite(webDom, currTime);
+    
+    SetToLocal(currentDate, todayAnalytic);
+};
 
 // SECTION: Active Tab / Update
 
@@ -91,17 +80,12 @@ const UpdateActiveTab = async () => {
     if (!currentTab || currentTab.url.length === 0) {
         console.error("Error: Could not get active tab: ", currentTab);
         return false;
-    }
-
-    todayAnalytic.AddWebsite(new WebsiteAnalytic(GetDomName(currentTab.url)));
-    todayAnalytic.UpdateActiveWebsite(currentTab.url);
+    };
 
     console.log(currentTab);
+
+    UpdateActiveWebsiteTime(currentTab.url);
     return true;
-}
-
-const UpdateActiveTabDuration = (currentDateData, currentDom) => {
-
 };
 
 // SECTION: To Popup
@@ -112,17 +96,18 @@ const SendToPopup = async () => {
 }
 
 // SECTION: Constants/Vars Used
-const todayAnalytic = new DateAnalytic();
+const currentDate = new Date().toDateString();
+const todayAnalytic = new DateAnalytic(currentDate);
 
 // SECTION: Startup Functions
 
 // Initialize todayAnalytic Object if not in local storage
 const InitializeDate = (currentDate, webDom = null) => {
     console.log("initializing date");
-    const dateInfo = new DateAnalytic();
+    const dateInfo = new DateAnalytic(currentDate);
 
     if (!webDom) {
-        const initialWebsite = new WebsiteAnalytic(webDom, new Date());
+        const initialWebsite = new WebsiteAnalytic(webDom, new Date().getTime());
         dateInfo.AddWebsite(initialWebsite);
     }
 
@@ -131,7 +116,6 @@ const InitializeDate = (currentDate, webDom = null) => {
 
 
 const StartUp = async () => {
-    const currentDate = new Date().toDateString();
     const currentDateData = await GetFromLocal(currentDate);
 
     if (Object.keys(currentDateData).length === 0) {
@@ -169,7 +153,7 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
     }
 });
 
-chrome.tabs.onActivated.addListener(() => {UpdateActiveTab()})
+chrome.tabs.onActivated.addListener(() => {UpdateActiveTab()});
 
 
 StartUp();
