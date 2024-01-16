@@ -2,14 +2,14 @@
 // SECTION: Constant vars
 
 export const webConstants = {
-    urlPrefix : "://",
-    urlSuffix : "/"
+    urlPrefix: "://",
+    urlSuffix: "/"
 };
 
 // SECTION: Classes
 
 class Session {
-    session = {startTime: null, endTime: null};
+    session = { startTime: null, endTime: null };
 
     constructor(startTime, endTime = null) {
         this.session.startTime = startTime;
@@ -21,7 +21,7 @@ class Session {
             this.session.startTime = new Date().getTime();
             return;
         };
-        
+
         this.session.startTime = startTime;
     };
 
@@ -63,28 +63,29 @@ export class WebsiteAnalytic {
     };
 
     EndSession(endTime) {
-        if (!endTime) {
-            this.currentSession.SetEndTime(new Date().getTime());
-            return;
-        };
+        const currEndTime = endTime ? endTime : new Date().getTime()
 
         this.currentSession.SetEndTime(endTime);
     };
 
     RestartSession(startTime) {
         this.currentSession.ClearSession();
-        this.currentSession.SetStartTime(startTime);
+        this.currentSession.SetStartTime(startTime ? startTime : new Date().getTime());
     };
-    
-    UpdateActiveTime(endTime = null) {
-        const currEndTime = endTime ? endTime : new Date().getTime();
 
-        this.currentSession.SetEndTime(currEndTime);
-
+    UpdateActiveTime(endTime = null, isStillActive = false) {
+        this.EndSession(endTime);
         this.activeTime += this.currentSession.GetSessionTime();
+
         console.log("Updated Active Time For: ", this.domain, " to: ", this.activeTime);
 
-        this.RestartSession(currEndTime);
+        if (isStillActive) {
+            this.RestartSession(endTime)
+        };
+    };
+
+    IncrementVisitedCount() {
+        this.numVisited++;
     };
 };
 
@@ -109,7 +110,7 @@ export class DateAnalytic {
         } else if (website) {
             return this.visitedWebsites.find((web) => web.domain === website.domain);
         };
-        
+
         return null;
     };
 
@@ -142,19 +143,24 @@ export class DateAnalytic {
         return this.GetWebsite(undefined, this.activeWebsiteDom);
     };
 
-    UpdateActiveWebsiteSession(endTime) {
+    UpdateActiveWebsiteSession(endTime, webDom) {
         if (this.activeWebsiteDom) {
-            this.GetActiveWebsite().UpdateActiveTime(endTime);
+            const previousActiveWebsite = this.GetActiveWebsite();
+
+            previousActiveWebsite.IncrementVisitedCount();
+            this.GetActiveWebsite().UpdateActiveTime(endTime, this.activeWebsiteDom.localeCompare(webDom) === 0);
         };
     };
 
     UpdateActiveWebsite(webDom, time) {
         if (!webDom) return;
 
+
         // if an active website not set, AddWebsite() called only.
         // else: update session/active time of previous activeDom, add new activeDom, set it.
-        this.UpdateActiveWebsiteSession(time);
+        this.UpdateActiveWebsiteSession(time, webDom);
         this.AddWebsite(new WebsiteAnalytic(webDom, time));
+
         this.activeWebsiteDom = webDom;
     };
 };

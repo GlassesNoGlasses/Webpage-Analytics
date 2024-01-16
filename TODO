@@ -6,6 +6,7 @@ DONE 3. Create Debugger functions
 4. Migrate content.js
 5. Figure out how to store weekly/monthly analytics data
 6. Implement numVisited in WebsiteAnalytic
+7. FIX endTime of sessions not showing up
 
 
 background.js

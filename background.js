@@ -91,7 +91,7 @@ const UpdateActiveTab = async () => {
 // SECTION: To Popup
 
 // Send message/data to popup.js
-const SendToPopup = async () => {
+const SendToPopup = async (popupData) => {
 
 }
 
