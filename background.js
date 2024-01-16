@@ -11,6 +11,16 @@ const Debugger = (actual, expected)  => {
     console.log("==============END-DEBUGGING==============");
 };
 
+const ClearLocalStorage = (callback = null) => {
+    if (chrome.runtime.lastError) {
+        console.error("Error: clearing local storage: " + chrome.runtime.lastError)
+    } else {
+        chrome.storage.local.clear(callback ? callback : () => {
+            console.warn("Local Storage cleared successfully")
+        });
+    };
+}
+
 // Get dom name
 const GetDomName = (url) => {
     try {
@@ -20,6 +30,20 @@ const GetDomName = (url) => {
         console.warn("Error: Could not find domain of : ", url);
         return null;
     };
+};
+
+const SetTodayAnalytic = async() => {
+    const currentDateData = await GetFromLocal(currentDate);
+
+    if (Object.keys(currentDateData).length === 0) {
+        InitializeDate(currentDate);
+        return;
+    }
+
+    todayAnalytic.SetVisited(currentDateData[currentDate].visitedWebsites.filter((website) => website.domain));
+
+    console.log("Fetched From Local: ", currentDateData);
+    console.log("New TodayAnalytic: ", todayAnalytic);
 };
 
 // SECTION: Storage Functions
@@ -47,8 +71,7 @@ const GetFromLocal = async (localKey) => {
     if(!dateAnalyticData) {
         console.warn("Error: Failed to retrive local dateAnalyticData for: ", localKey);
         return null;
-    }
-    console.log(dateAnalyticData);
+    };
     return dateAnalyticData;
 };
 
@@ -82,9 +105,10 @@ const UpdateActiveTab = async () => {
         return false;
     };
 
-    console.log(currentTab);
+    console.log("FETCHED TAB: ", currentTab);
 
     UpdateActiveWebsiteTime(currentTab.url);
+    console.log("ACTIVE TAB UPDATED TO: ", todayAnalytic);
     return true;
 };
 
@@ -116,33 +140,17 @@ const InitializeDate = (currentDate, webDom = null) => {
 
 
 const StartUp = async () => {
-    const currentDateData = await GetFromLocal(currentDate);
+    ClearLocalStorage();
 
-    if (Object.keys(currentDateData).length === 0) {
-        InitializeDate(currentDate);
-        return;
-    }
-
-    todayAnalytic.SetVisited(currentDateData[currentDate].visitedWebsites);
-
-    console.log("Startup From Local: ", currentDateData);
-    console.log("Startup TodayAnalytic: ", todayAnalytic);
-
+    await SetTodayAnalytic();
 };
 
 chrome.storage.onChanged.addListener((changes, namespace) => {
     console.log(changes, namespace);
 
-    for (let [key, { oldValue, newValue }] of Object.entries(changes)) {
-        console.log(
-          `Storage key "${key}" in namespace "${namespace}" changed.`,
-          `Old value was "${oldValue}", new value is "${newValue}".`
-        );
-    }
-
     switch (namespace) {
         case "local":
-
+            () => SetTodayAnalytic();
             break;
         
         case "sync":

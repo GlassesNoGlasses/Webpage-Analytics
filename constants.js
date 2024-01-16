@@ -50,10 +50,12 @@ export class WebsiteAnalytic {
     numVisited = 0; // TODO
     activeTime = 0; // stored in ms
 
-    constructor(domain, startTime) {
+    constructor(domain, startTime, currentSession = new Session(startTime), numVisited = 0, activeTime = 0) {
         this.domain = domain;
         this.startTime = startTime;
-        this.currentSession = new Session(startTime);
+        this.currentSession = currentSession;
+        this.numVisited = numVisited;
+        this.activeTime = activeTime;
     };
 
     SetSessionStartTime(startTime) {
@@ -79,13 +81,13 @@ export class WebsiteAnalytic {
 
         console.log("Updated Active Time For: ", this.domain, " to: ", this.activeTime);
 
-        if (isStillActive) {
-            this.RestartSession(endTime)
-        };
+        // if (isStillActive) {
+        //     this.RestartSession(endTime)
+        // };
     };
 
     IncrementVisitedCount() {
-        this.numVisited++;
+        this.numVisited += 1;
     };
 };
 
@@ -116,13 +118,19 @@ export class DateAnalytic {
 
     SetVisited(visitedWebsites) {
         if (visitedWebsites.length !== 0) {
-            this.visitedWebsites = structuredClone(visitedWebsites);
+            this.visitedWebsites = structuredClone(visitedWebsites.map((web) => {
+                return web instanceof WebsiteAnalytic ? web : 
+                new WebsiteAnalytic(web.domain, web.startTime, web.currentSession, web.endTime, web.numVisited, web.activeTime);
+            }));
         };
-    }
+    };
 
     AddWebsite(website) {
         const webFound = this.GetWebsite(website);
-        if (!webFound) {
+
+        if (!(website instanceof WebsiteAnalytic)) {
+            console.error("Error: added website is not of class: WebsiteAnalytic");
+        } else if (!webFound) {
             this.visitedWebsites.push(website);
         };
     };
@@ -147,8 +155,8 @@ export class DateAnalytic {
         if (this.activeWebsiteDom) {
             const previousActiveWebsite = this.GetActiveWebsite();
 
-            previousActiveWebsite.IncrementVisitedCount();
-            this.GetActiveWebsite().UpdateActiveTime(endTime, this.activeWebsiteDom.localeCompare(webDom) === 0);
+            console.log("PREV ACTIVE WEB: ", previousActiveWebsite);
+            previousActiveWebsite.UpdateActiveTime(endTime, this.activeWebsiteDom.localeCompare(webDom) === 0);
         };
     };
 
@@ -162,6 +170,10 @@ export class DateAnalytic {
         this.AddWebsite(new WebsiteAnalytic(webDom, time));
 
         this.activeWebsiteDom = webDom;
+
+        const currentActiveWebsite = this.GetActiveWebsite();
+        currentActiveWebsite.IncrementVisitedCount();
+        currentActiveWebsite.RestartSession(time);
     };
 };
 
