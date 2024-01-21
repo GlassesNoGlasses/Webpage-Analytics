@@ -40,7 +40,7 @@ const SetTodayAnalytic = async() => {
         return;
     }
 
-    todayAnalytic.SetVisited(currentDateData[currentDate].visitedWebsites.filter((website) => website.domain));
+    todayAnalytic.SetVisited(currentDateData[currentDate].visitedWebsites);
 
     console.log("Fetched From Local: ", currentDateData);
     console.log("New TodayAnalytic: ", todayAnalytic);
@@ -105,35 +105,68 @@ const UpdateActiveTab = async () => {
         return false;
     };
 
+    ClearWebsiteInterval();
+
     console.log("FETCHED TAB: ", currentTab);
 
     UpdateActiveWebsiteTime(currentTab.url);
     console.log("ACTIVE TAB UPDATED TO: ", todayAnalytic);
+
+    CreateWebsiteInterval(currentTab.url);
     return true;
 };
+
+// Handle updating analytic upon url change of current tab
+const TabUpdateHandler = (changeInfo) => {
+    const newTabUrl = changeInfo.url;
+
+    if (newTabUrl) {
+        ClearWebsiteInterval();
+        UpdateActiveWebsiteTime(newTabUrl);
+        CreateWebsiteInterval(newTabUrl);
+    };
+};
+
+// Create interval to update website analytics every
+// in intervals of TAB_AUTO_UPDATE_TIME
+const CreateWebsiteInterval = (activeWebUrl) => {
+    if (activeWebUrl && !interval) {
+        console.log("CREATING INTERVAL FOR: ", activeWebUrl);
+        interval = setInterval(() => {
+            UpdateActiveWebsiteTime(activeWebUrl);
+        }, TAB_AUTO_UPDATE_TIME);
+    };
+};
+
+// Clear existing interval for auto update
+const ClearWebsiteInterval = () => {
+    if (interval) {
+        console.log("REMOVING INTERVAL");
+        clearInterval(interval);
+        interval = null;
+    };
+};
+
 
 // SECTION: To Popup
 
 // Send message/data to popup.js
 const SendToPopup = async (popupData) => {
 
-}
+};
 
 // SECTION: Constants/Vars Used
+const TAB_AUTO_UPDATE_TIME = 5000// 120000; // 2 minutes
 const currentDate = new Date().toDateString();
 const todayAnalytic = new DateAnalytic(currentDate);
+let interval = null;
 
 // SECTION: Startup Functions
 
 // Initialize todayAnalytic Object if not in local storage
-const InitializeDate = (currentDate, webDom = null) => {
+const InitializeDate = (currentDate) => {
     console.log("initializing date");
     const dateInfo = new DateAnalytic(currentDate);
-
-    if (!webDom) {
-        const initialWebsite = new WebsiteAnalytic(webDom, new Date().getTime());
-        dateInfo.AddWebsite(initialWebsite);
-    }
 
     SetToLocal(currentDate, dateInfo);
 };
@@ -161,7 +194,13 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
     }
 });
 
+// Updates analytic upon active tab change
 chrome.tabs.onActivated.addListener(() => {UpdateActiveTab()});
+
+// Updates analytic current tab url change
+chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+    TabUpdateHandler(changeInfo);
+});
 
 
 StartUp();

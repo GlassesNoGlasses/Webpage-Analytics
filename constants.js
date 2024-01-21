@@ -26,7 +26,7 @@ class Session {
     };
 
     SetEndTime(endTime) {
-        if (endTime && endTime >= this.session.startTime) {
+        if (!endTime || endTime >= this.session.startTime) {
             this.session.endTime = endTime;
         };
     };
@@ -80,10 +80,6 @@ export class WebsiteAnalytic {
         this.activeTime += this.currentSession.GetSessionTime();
 
         console.log("Updated Active Time For: ", this.domain, " to: ", this.activeTime);
-
-        // if (isStillActive) {
-        //     this.RestartSession(endTime)
-        // };
     };
 
     IncrementVisitedCount() {
