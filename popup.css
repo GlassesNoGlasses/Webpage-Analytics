@@ -1,0 +1,36 @@
+
+html {
+    height: 500px;
+    width: 350px;
+};
+
+.main-title {
+    background-color: aqua;
+};
+
+body {
+
+}
+
+.nav-bar {
+    height: fit-content;
+    width: fit-content;
+    display: inline-flex;
+    position: fixed;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    background-color: grey;
+};
+
+.nav-list {
+}
+
+
+.active-website {
+    text-align: center;
+    font-style: italic;
+    font-size: xx-large;
+}
+
+

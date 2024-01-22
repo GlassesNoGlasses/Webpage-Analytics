@@ -1,5 +1,5 @@
 
-import { WebsiteAnalytic, DateAnalytic, webConstants } from "./constants.js";
+import { DateAnalytic, webConstants, SetToLocal, GetFromLocal, ClearLocalStorage } from "./constants.js";
 
 console.log("hiii");
 
@@ -10,16 +10,6 @@ const Debugger = (actual, expected)  => {
     console.log("Expected Value: " + expected);
     console.log("==============END-DEBUGGING==============");
 };
-
-const ClearLocalStorage = (callback = null) => {
-    if (chrome.runtime.lastError) {
-        console.error("Error: clearing local storage: " + chrome.runtime.lastError)
-    } else {
-        chrome.storage.local.clear(callback ? callback : () => {
-            console.warn("Local Storage cleared successfully")
-        });
-    };
-}
 
 // Get dom name
 const GetDomName = (url) => {
@@ -47,35 +37,6 @@ const SetTodayAnalytic = async() => {
 };
 
 // SECTION: Storage Functions
-
-// Set to local storage {localKey : val}
-const SetToLocal = (localKey, val) => {
-    const obj = {};
-    obj[localKey] = val;
-
-    chrome.storage.local.set(obj).then((succ, rej) => {
-        if (rej) {
-            console.warn("Error: Could not save key ", localKey, " to local storage");
-            return false;
-        } else {
-            console.log("Key: ", localKey, " is set to Value: ", val);
-            return true;
-        };
-    });
-};
-
-// Get from local storage of key "localKey"
-const GetFromLocal = async (localKey) => {
-    const dateAnalyticData = await chrome.storage.local.get(localKey);
-
-    if(!dateAnalyticData) {
-        console.warn("Error: Failed to retrive local dateAnalyticData for: ", localKey);
-        return null;
-    };
-    return dateAnalyticData;
-};
-
-
 const UpdateActiveWebsiteTime = (activeWebUrl) => {
     const webDom = GetDomName(activeWebUrl);
     const currTime = new Date().getTime();
