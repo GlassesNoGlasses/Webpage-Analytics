@@ -9,15 +9,27 @@
 <body>
     <div class="nav-bar">
         <div class="nav-list">
-            <button>B1</button>
-            <button>B2</button>
-            <button>B3</button>
-            <button>B3</button>
+            <button class="nav-button" id="Today">Today</button>
+            <button class="nav-button" id="Week">Week</button>
+            <button class="nav-button" id="History">History</button>
+            <button class="nav-button" id="Settings">Settings</button>
         </div>
     </div>
-    <div class="active-website">Hello</div>
+    <span class="vertical-spacer"></span>
+    <div class="active-website-container">
+        <div class="active-website-intro">Current Active Website:</div>
+        <span class="vertical-spacer"></span>
+        <div class="active-website-dom" id="activeWebDom">DOM HERE</div>
+        <span class="large-vertical-spacer"></span>
+        <div class="active-time" id="activeTime">Total Active Time: </div>
+    </div>
+    <span class="large-vertical-spacer"></span>
+    <div class="all-websites-intro">All Viewed Websites</div>
+    <span class="vertical-spacer"></span>
+    <div class="websites-container" id="visitedToday">
+        <div class="viewed-website">WEBSITE HERE</div>
+    </div>
+    <script src='popup.js'></script>
 </body>
 </html>
 
-<script src="popupHelper.js"></script>
-<script src='popup.js'></script>

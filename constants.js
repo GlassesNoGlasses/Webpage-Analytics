@@ -135,14 +135,6 @@ export class DateAnalytic {
         this.visitedWebsites = this.visitedWebsites.filter((web) => web.domain !== website.domain);
     };
 
-    // UpdateWebsiteEndtime(website, endtime) {
-    //     const webIndex = this.GetWebsite(website);
-
-    //     if (webIndex && webIndex !== -1) {
-    //         this.visitedWebsites[webIndex].UpdateScreenTime(endtime);
-    //     };
-    // };
-
     GetActiveWebsite() {
         return this.GetWebsite(undefined, this.activeWebsiteDom);
     };
@@ -152,13 +144,13 @@ export class DateAnalytic {
             const previousActiveWebsite = this.GetActiveWebsite();
 
             console.log("PREV ACTIVE WEB: ", previousActiveWebsite);
+            console.log("INSTANCE OF WEBSITE: ", previousActiveWebsite instanceof WebsiteAnalytic)
             previousActiveWebsite.UpdateActiveTime(endTime, this.activeWebsiteDom.localeCompare(webDom) === 0);
         };
     };
 
     UpdateActiveWebsite(webDom, time) {
         if (!webDom) return;
-
 
         // if an active website not set, AddWebsite() called only.
         // else: update session/active time of previous activeDom, add new activeDom, set it.
@@ -185,19 +177,12 @@ const IsLaterDate = (currDate, targetDate) => {
 };
 
 // Set to local storage {localKey : val}
-export const SetToLocal = (localKey, val) => {
+export const SetToLocal = async (localKey, val) => {
     const obj = {};
     obj[localKey] = val;
+    console.log("trying to set to local storage");
 
-    chrome.storage.local.set(obj).then((succ, rej) => {
-        if (rej) {
-            console.warn("Error: Could not save key ", localKey, " to local storage");
-            return false;
-        } else {
-            console.log("Key: ", localKey, " is set to Value: ", val);
-            return true;
-        };
-    });
+    await chrome.storage.local.set(obj);
 };
 
 // Get from local storage of key "localKey"

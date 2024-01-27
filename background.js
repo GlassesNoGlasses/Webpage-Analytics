@@ -1,8 +1,6 @@
 
 import { DateAnalytic, webConstants, SetToLocal, GetFromLocal, ClearLocalStorage } from "./constants.js";
 
-console.log("hiii");
-
 // SECTION: Helper Functions
 const Debugger = (actual, expected)  => {
     console.log("==============DEBUGGING==================");
@@ -22,28 +20,28 @@ const GetDomName = (url) => {
     };
 };
 
-const SetTodayAnalytic = async() => {
+const SetTodayAnalytic = async () => {
+    console.log("setting today analytics");
     const currentDateData = await GetFromLocal(currentDate);
 
     if (Object.keys(currentDateData).length === 0) {
-        InitializeDate(currentDate);
+        await InitializeDate(currentDate);
         return;
     }
 
     todayAnalytic.SetVisited(currentDateData[currentDate].visitedWebsites);
 
-    console.log("Fetched From Local: ", currentDateData);
     console.log("New TodayAnalytic: ", todayAnalytic);
 };
 
 // SECTION: Storage Functions
-const UpdateActiveWebsiteTime = (activeWebUrl) => {
+const UpdateActiveWebsiteTime = async (activeWebUrl) => {
     const webDom = GetDomName(activeWebUrl);
     const currTime = new Date().getTime();
 
     todayAnalytic.UpdateActiveWebsite(webDom, currTime);
     
-    SetToLocal(currentDate, todayAnalytic);
+    await SetToLocal(currentDate, todayAnalytic);
 };
 
 // SECTION: Active Tab / Update
@@ -62,28 +60,25 @@ const UpdateActiveTab = async () => {
     const currentTab = await GetRecentActiveTab();
 
     if (!currentTab || currentTab.url.length === 0) {
-        console.error("Error: Could not get active tab: ", currentTab);
-        return false;
+        console.warn("Warning: Could not get active tab: ", currentTab);
+        return;
     };
 
     ClearWebsiteInterval();
-
-    console.log("FETCHED TAB: ", currentTab);
-
-    UpdateActiveWebsiteTime(currentTab.url);
+    await UpdateActiveWebsiteTime(currentTab.url);
     console.log("ACTIVE TAB UPDATED TO: ", todayAnalytic);
 
     CreateWebsiteInterval(currentTab.url);
-    return true;
+    return;
 };
 
 // Handle updating analytic upon url change of current tab
-const TabUpdateHandler = (changeInfo) => {
+const TabUpdateHandler = async (changeInfo) => {
     const newTabUrl = changeInfo.url;
 
     if (newTabUrl) {
         ClearWebsiteInterval();
-        UpdateActiveWebsiteTime(newTabUrl);
+        await UpdateActiveWebsiteTime(newTabUrl);
         CreateWebsiteInterval(newTabUrl);
     };
 };
@@ -92,9 +87,8 @@ const TabUpdateHandler = (changeInfo) => {
 // in intervals of TAB_AUTO_UPDATE_TIME
 const CreateWebsiteInterval = (activeWebUrl) => {
     if (activeWebUrl && !interval) {
-        console.log("CREATING INTERVAL FOR: ", activeWebUrl);
-        interval = setInterval(() => {
-            UpdateActiveWebsiteTime(activeWebUrl);
+        interval = setInterval(async () => {
+            await UpdateActiveWebsiteTime(activeWebUrl);
         }, TAB_AUTO_UPDATE_TIME);
     };
 };
@@ -102,7 +96,6 @@ const CreateWebsiteInterval = (activeWebUrl) => {
 // Clear existing interval for auto update
 const ClearWebsiteInterval = () => {
     if (interval) {
-        console.log("REMOVING INTERVAL");
         clearInterval(interval);
         interval = null;
     };
@@ -110,11 +103,6 @@ const ClearWebsiteInterval = () => {
 
 
 // SECTION: To Popup
-
-// Send message/data to popup.js
-const SendToPopup = async (popupData) => {
-
-};
 
 // SECTION: Constants/Vars Used
 const TAB_AUTO_UPDATE_TIME = 5000// 120000; // 2 minutes
@@ -125,11 +113,10 @@ let interval = null;
 // SECTION: Startup Functions
 
 // Initialize todayAnalytic Object if not in local storage
-const InitializeDate = (currentDate) => {
-    console.log("initializing date");
+const InitializeDate = async (currentDate) => {
     const dateInfo = new DateAnalytic(currentDate);
 
-    SetToLocal(currentDate, dateInfo);
+    await SetToLocal(currentDate, dateInfo);
 };
 
 
@@ -139,12 +126,12 @@ const StartUp = async () => {
     await SetTodayAnalytic();
 };
 
-chrome.storage.onChanged.addListener((changes, namespace) => {
-    console.log(changes, namespace);
-
-    switch (namespace) {
+chrome.storage.onChanged.addListener((changes, areaName) => {
+    console.log("Recieved change to: ", areaName);
+    switch (areaName) {
         case "local":
-            () => SetTodayAnalytic();
+            console.log("LOCAL");
+            SetTodayAnalytic ();
             break;
         
         case "sync":
@@ -160,7 +147,7 @@ chrome.tabs.onActivated.addListener(() => {UpdateActiveTab()});
 
 // Updates analytic current tab url change
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
-    TabUpdateHandler(changeInfo);
+    () => TabUpdateHandler(changeInfo);
 });
 
 
