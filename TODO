@@ -18,9 +18,10 @@ popup.html
     a.
 
 popup.js
-1. Check chrome.storage changes variable is correct.
+DONE 1. Check chrome.storage changes variable is correct.
 2. Implement weekly analytic object.
 3. Implement Analytics history object (i.e. total runtime on chrome, etc.).
+4. BUG: Set today analytic obj visited websites properly.
 
 
 -----------------DONE------------------

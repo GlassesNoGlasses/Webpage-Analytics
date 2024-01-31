@@ -5,10 +5,11 @@ const todayAnalytic =
 {
     currentDate: currentDate,
     activeWebsiteDom: null,
-    visitedWebsites: []
+    visitedWebsites: null
 };
 const weekAnalytic = {};
 const historyAnalytic = {};
+let firstWebsiteVisited = null;
 
 // SECTION: Helper Functions
 
@@ -23,13 +24,26 @@ const GetFromLocal = async (localKey) => {
     return dateAnalyticData;
 };
 
-// Set constant todayAnalytic to updated data found.
-const SetTodayAnalytic = async (currentDateData) => {
-    if (!currentDateData || Object.keys(currentDateData).length === 0) {
-        return;
-    }
+const SendToBackground = async (fromMessage, requestMessage) => {
+    const response = await chrome.runtime.sendMessage({from: fromMessage, reason: requestMessage});
 
-    todayAnalytic = {...currentDateData};
+    if (!response) {
+        console.warn("Error: Could not send message from popup.js.");
+        return;
+    };
+
+    console.log(response);
+};
+
+// Set constant todayAnalytic to updated data found.
+const SetTodayAnalytic = (currentDateData) => {
+    if (!currentDateData) return;
+
+    firstWebsiteVisited = currentDateData.visitedWebsites.length > 0 ?
+        currentDateData.visitedWebsites[0].domain : null;
+
+    todayAnalytic.activeWebsiteDom = currentDateData.activeWebsiteDom;
+    todayAnalytic.visitedWebsites = currentDateData.visitedWebsites;
     console.log("POPUP: ", todayAnalytic)
 };
 
@@ -56,11 +70,10 @@ const ClearAllChildren = (element) => {
 
 // Append a list of children to element.
 const AppendChildren = (element, children) => {
-    children.foreach((child) => {
+    children.forEach((child) => {
         if (child) element.appendChild(child);
     });
 }
-
 
 // SECTION: TO HTML FUNCTIONS
 
@@ -70,7 +83,7 @@ const UpdateActiveWebsite = () => {
     const activeTimeElement = document.getElementById("activeTime");
     const activeTime = GetActiveTime(todayAnalytic.activeWebsiteDom);
 
-    if (!activeTime) return;
+    if (!activeTime && activeTime !== 0) return;
 
     webDomElement.textContent = todayAnalytic.activeWebsiteDom;
     activeTimeElement.textContent = "Total Active Time: " + activeTime.toString() + "m";
@@ -80,11 +93,12 @@ const UpdateActiveWebsite = () => {
 const WebsitesToHtml = (websites, className) => {
     return websites.map((website) => {
         const time = GetActiveTime(website);
-        if (!time) return null;
+        if (!time && time !== 0) return null;
 
         const div = document.createElement("div");
         div.className = className;
-        div.textContent = website.domain + " " + time.toString() + "m";
+        div.textContent = (website.domain instanceof Object ? firstWebsiteVisited : website.domain)
+            + " " + time.toString() + "m";
 
         return div;
     });
@@ -93,7 +107,7 @@ const WebsitesToHtml = (websites, className) => {
 // Update visited websites of "Today" tab.
 const UpdateTodayVisitedWebsites = () => {
     const visitedToday = document.getElementById('visitedToday');
-    const updatedVisited = WebsitesToHtml(todayAnalytic.visitedWebsites);
+    const updatedVisited = WebsitesToHtml(todayAnalytic.visitedWebsites, "viewed-website");
 
     ClearAllChildren(visitedToday);
     AppendChildren(visitedToday, updatedVisited);
@@ -101,35 +115,19 @@ const UpdateTodayVisitedWebsites = () => {
 
 // Updates HTML data with analytics data.
 const UpdateHTML = () => {
+    UpdateActiveWebsite();
     UpdateTodayVisitedWebsites();
 };
+
+// SECTION: Startup Functions
 
 // Starts up and fills popup.html with information.
 const StartUp = async () => {
     const currentDateData = await GetFromLocal(currentDate);
 
-    await SetTodayAnalytic(currentDateData);
+    SetTodayAnalytic(currentDateData[currentDate]);
+    UpdateHTML();
 };
 
+StartUp();
 
-// Run when chrome is opened.
-chrome.runtime.onStartup.addListener(function() {
-    StartUp();
-});
-
-// Main: Run when local storage changes.
-chrome.storage.onChanged.addListener((changes, namespace) => {
-    console.log("POPUP LOCAL STORAGE CHANGES");
-
-    switch (namespace) {
-        case "local":
-            () => SetTodayAnalytic(changes);
-            break;
-        
-        case "sync":
-            break;
-    
-        default:
-            break;
-    }
-});

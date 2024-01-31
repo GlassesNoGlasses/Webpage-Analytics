@@ -1,8 +1,8 @@
 
-import { DateAnalytic, webConstants, SetToLocal, GetFromLocal, ClearLocalStorage } from "./constants.js";
+import { DateAnalytic, webConstants, SetToLocal, GetFromLocal, ClearLocalStorage, WebsiteAnalytic } from "./constants.js";
 
 // SECTION: Helper Functions
-const Debugger = (actual, expected)  => {
+const Debugger = (actual, expected) => {
     console.log("==============DEBUGGING==================");
     console.warn("Actual Value: " + actual);
     console.log("Expected Value: " + expected);
@@ -13,7 +13,8 @@ const Debugger = (actual, expected)  => {
 const GetDomName = (url) => {
     try {
         const rawDomain = url.slice(url.indexOf(webConstants.urlPrefix) + webConstants.urlPrefix.length);
-        return rawDomain.indexOf(webConstants.urlSuffix) !== -1 ? rawDomain.slice(0, rawDomain.indexOf(webConstants.urlSuffix)) : rawDomain; 
+        return rawDomain.indexOf(webConstants.urlSuffix) !== -1 ?
+        rawDomain.slice(0, rawDomain.indexOf(webConstants.urlSuffix)) : rawDomain;
     } catch (error) {
         console.warn("Error: Could not find domain of : ", url);
         return null;
@@ -21,16 +22,15 @@ const GetDomName = (url) => {
 };
 
 const SetTodayAnalytic = async () => {
-    console.log("setting today analytics");
     const currentDateData = await GetFromLocal(currentDate);
 
-    if (Object.keys(currentDateData).length === 0) {
+    if (!currentDateData || Object.keys(currentDateData).length === 0) {
         await InitializeDate(currentDate);
         return;
     }
 
+    console.log("Fetched from Local: ", currentDateData);
     todayAnalytic.SetVisited(currentDateData[currentDate].visitedWebsites);
-
     console.log("New TodayAnalytic: ", todayAnalytic);
 };
 
@@ -39,9 +39,9 @@ const UpdateActiveWebsiteTime = async (activeWebUrl) => {
     const webDom = GetDomName(activeWebUrl);
     const currTime = new Date().getTime();
 
-    todayAnalytic.UpdateActiveWebsite(webDom, currTime);
-    
-    await SetToLocal(currentDate, todayAnalytic);
+    todayAnalytic.UpdateActiveWebsite(new WebsiteAnalytic(webDom, currTime), currTime);
+
+    await SetToLocal(currentDate, todayAnalytic.SerializeToObject()); // store to local
 };
 
 // SECTION: Active Tab / Update
@@ -66,9 +66,8 @@ const UpdateActiveTab = async () => {
 
     ClearWebsiteInterval();
     await UpdateActiveWebsiteTime(currentTab.url);
-    console.log("ACTIVE TAB UPDATED TO: ", todayAnalytic);
-
     CreateWebsiteInterval(currentTab.url);
+
     return;
 };
 
@@ -116,7 +115,7 @@ let interval = null;
 const InitializeDate = async (currentDate) => {
     const dateInfo = new DateAnalytic(currentDate);
 
-    await SetToLocal(currentDate, dateInfo);
+    await SetToLocal(currentDate, dateInfo.SerializeToObject());
 };
 
 
@@ -127,27 +126,36 @@ const StartUp = async () => {
 };
 
 chrome.storage.onChanged.addListener((changes, areaName) => {
-    console.log("Recieved change to: ", areaName);
     switch (areaName) {
-        case "local":
-            console.log("LOCAL");
-            SetTodayAnalytic ();
-            break;
-        
         case "sync":
             break;
-    
+
         default:
             break;
     }
 });
 
 // Updates analytic upon active tab change
-chrome.tabs.onActivated.addListener(() => {UpdateActiveTab()});
+chrome.tabs.onActivated.addListener(async () => { await UpdateActiveTab() });
 
 // Updates analytic current tab url change
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
-    () => TabUpdateHandler(changeInfo);
+    async () => await TabUpdateHandler(changeInfo);
+});
+
+// Recieves messages from popup.js for data
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+    (async () => {
+        const response = { data: null };
+
+        if (request && request.from && request.reason) {
+            if (request.from === "popup.js" && request.reason === "startup") {
+                response.data = await GetFromLocal(currentDate);
+            }
+        }
+        sendResponse(response);
+    })();
+    return true;
 });
 
 
