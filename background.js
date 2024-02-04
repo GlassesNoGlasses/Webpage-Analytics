@@ -1,5 +1,6 @@
 
-import { DateAnalytic, webConstants, SetToLocal, GetFromLocal, ClearLocalStorage, WebsiteAnalytic } from "./constants.js";
+import { DateAnalytic, GetDomName, SetToLocal, 
+    GetFromLocal, ClearLocalStorage, WebsiteAnalytic, GetFromSync} from "./constants.js";
 
 // SECTION: Helper Functions
 const Debugger = (actual, expected) => {
@@ -7,18 +8,6 @@ const Debugger = (actual, expected) => {
     console.warn("Actual Value: " + actual);
     console.log("Expected Value: " + expected);
     console.log("==============END-DEBUGGING==============");
-};
-
-// Get dom name
-const GetDomName = (url) => {
-    try {
-        const rawDomain = url.slice(url.indexOf(webConstants.urlPrefix) + webConstants.urlPrefix.length);
-        return rawDomain.indexOf(webConstants.urlSuffix) !== -1 ?
-        rawDomain.slice(0, rawDomain.indexOf(webConstants.urlSuffix)) : rawDomain;
-    } catch (error) {
-        console.warn("Error: Could not find domain of : ", url);
-        return null;
-    };
 };
 
 const SetTodayAnalytic = async () => {
@@ -62,7 +51,12 @@ const UpdateActiveTab = async () => {
     if (!currentTab || currentTab.url.length === 0) {
         console.warn("Warning: Could not get active tab: ", currentTab);
         return;
+    } else if (blockedWebsites.find((website) => website.url === newTabUrl)) {
+        console.warn("Website blocked by user");
+        return;
     };
+
+    console.log("New Active Tab: ", currentTab);
 
     ClearWebsiteInterval();
     await UpdateActiveWebsiteTime(currentTab.url);
@@ -77,8 +71,11 @@ const TabUpdateHandler = async (changeInfo) => {
 
     if (newTabUrl) {
         ClearWebsiteInterval();
-        await UpdateActiveWebsiteTime(newTabUrl);
-        CreateWebsiteInterval(newTabUrl);
+
+        if (!blockedWebsites.find((website) => website.url === newTabUrl)) {
+            await UpdateActiveWebsiteTime(newTabUrl);
+            CreateWebsiteInterval(newTabUrl);
+        }
     };
 };
 
@@ -107,6 +104,7 @@ const ClearWebsiteInterval = () => {
 const TAB_AUTO_UPDATE_TIME = 5000// 120000; // 2 minutes
 const currentDate = new Date().toDateString();
 const todayAnalytic = new DateAnalytic(currentDate);
+let blockedWebsites = [];
 let interval = null;
 
 // SECTION: Startup Functions
@@ -118,45 +116,42 @@ const InitializeDate = async (currentDate) => {
     await SetToLocal(currentDate, dateInfo.SerializeToObject());
 };
 
-
+// Starts up background.js
 const StartUp = async () => {
-    ClearLocalStorage();
+    //ClearLocalStorage();
+    const blockedData = await GetFromSync("blockedWebsites");
+
+    if (blockedData && blockedData.blockedWebsites) {
+        blockedWebsites = blockedData.blockedWebsites;
+    };
+
 
     await SetTodayAnalytic();
 };
-
-chrome.storage.onChanged.addListener((changes, areaName) => {
-    switch (areaName) {
-        case "sync":
-            break;
-
-        default:
-            break;
-    }
-});
 
 // Updates analytic upon active tab change
 chrome.tabs.onActivated.addListener(async () => { await UpdateActiveTab() });
 
 // Updates analytic current tab url change
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
-    async () => await TabUpdateHandler(changeInfo);
+    TabUpdateHandler(changeInfo);
 });
 
-// Recieves messages from popup.js for data
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-    (async () => {
-        const response = { data: null };
+// DEPRECATED
+// // Recieves messages from popup.js for data
+// chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+//     (async () => {
+//         const response = { data: null };
 
-        if (request && request.from && request.reason) {
-            if (request.from === "popup.js" && request.reason === "startup") {
-                response.data = await GetFromLocal(currentDate);
-            }
-        }
-        sendResponse(response);
-    })();
-    return true;
-});
+//         if (request && request.from && request.reason) {
+//             if (request.from === "popup.js" && request.reason === "startup") {
+//                 response.data = await GetFromLocal(currentDate);
+//             }
+//         }
+//         sendResponse(response);
+//     })();
+//     return true;
+// });
 
 
 StartUp();

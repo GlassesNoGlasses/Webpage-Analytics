@@ -1,13 +1,11 @@
 
 // SECTION: Constant vars
-
 export const webConstants = {
     urlPrefix: "://",
     urlSuffix: "/"
 };
 
 // SECTION: Classes
-
 class Session {
     session = { startTime: null, endTime: null };
 
@@ -195,12 +193,16 @@ export class DateAnalytic {
 
 // SECTION: Functions
 
-// Checks if targetDate is later than currDate
-const IsLaterDate = (currDate, targetDate) => {
-    const utc1 = Date.UTC(currDate.getYear(), currDate.getMonth(), currDate.getDate(), currDate.getHours(), currDate.getMinutes());
-    const utc2 = Date.UTC(targetDate.getYear(), targetDate.getMonth(), targetDate.getDate(), targetDate.getHours(), targetDate.getMinutes());
-
-    return Math.abs(targetDate) - Math.abs(currDate) > 0;
+// Get dom name
+export const GetDomName = (url) => {
+    try {
+        const rawDomain = url.slice(url.indexOf(webConstants.urlPrefix) + webConstants.urlPrefix.length);
+        return rawDomain.indexOf(webConstants.urlSuffix) !== -1 ?
+        rawDomain.slice(0, rawDomain.indexOf(webConstants.urlSuffix)) : rawDomain;
+    } catch (error) {
+        console.warn("Error: Could not find domain of : ", url);
+        return null;
+    };
 };
 
 // Set to local storage {localKey : val}
@@ -231,6 +233,18 @@ export const ClearLocalStorage = (callback = null) => {
             console.warn("Local Storage cleared successfully")
         });
     };
+};
+
+// Get from sync storage with key "key".
+export const GetFromSync = async (key) => {
+    const data = await chrome.storage.sync.get(key);
+
+    if(!data) {
+        console.warn("Error: Failed to retrive local dateAnalyticData for: ", key);
+        return null;
+    };
+
+    return data;
 };
 
 

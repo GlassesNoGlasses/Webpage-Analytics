@@ -1,4 +1,6 @@
 
+/* General */
+
 html {
     height: 500px;
     width: 350px;
@@ -44,6 +46,21 @@ body {
     filter: brightness(125%);
 }
 
+.current-display {
+    height: 100%;
+    width: 100%;
+    margin: 1%;
+}
+
+.verification-message {
+    font-size: medium;
+    font-style: italic;
+    color: lightgreen;
+    display: none;
+}
+
+/* Spacers  */
+
 .vertical-spacer {
     display: block;
     height: 1%;
@@ -55,6 +72,8 @@ body {
     height: 10%;
     width: 100%;
 }
+
+/* Active website view */
 
 .active-website-container {
     height: 20%;
@@ -81,6 +100,12 @@ body {
     font-size: large;
 }
 
+/* Today Analytic Styles */
+
+#display-today {
+    display: block;
+}
+
 .all-websites-intro {
     height: fit-content;
     width: 100%;
@@ -89,8 +114,9 @@ body {
 }
 
 .websites-container {
-    height: 50%;
-    width: 90%;
+    height: 60%;
+    width: 100%;
+    overflow-y: auto;
 }
 
 .viewed-website {
@@ -99,9 +125,35 @@ body {
     display: inline-block;
     text-align: center;
     font-size: large;
+    text-decoration: underline;
     word-spacing: 100px;
     margin: 1% 1% 1% 1%;
 }
 
+/* Setting Styles */
 
+#display-settings {
+    display: none;
+}
+
+.add-blocked-dom {
+    height: 17%;
+    width: 100%;
+    display: inline-block;
+}
+
+.add-title {
+    font-size: x-large;
+    text-align: center;
+}
+
+#blocked-input {
+    width: 96%;
+}
+
+#addBlocked {
+    width: 50%;
+    display: flex;
+    justify-content: center;
+}
 

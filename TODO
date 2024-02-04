@@ -8,11 +8,6 @@ DONE 4. Migrate content.js
 DONE 6. Implement numVisited in WebsiteAnalytic
 DONE 7. FIX endTime of sessions not showing up
 
-BUGS
-1. ERROR ACTIVE WEBSITE NOT of instance WEBSITE ANALYTIC
-    Fix P1: Use messages between background and popup
-    Fix P2: Remove onchange listener for storage and manually GetFromLocal.
-
 popup.html
 1. Create design
     a.
@@ -21,7 +16,6 @@ popup.js
 DONE 1. Check chrome.storage changes variable is correct.
 2. Implement weekly analytic object.
 3. Implement Analytics history object (i.e. total runtime on chrome, etc.).
-4. BUG: Set today analytic obj visited websites properly.
 
 
 -----------------DONE------------------
