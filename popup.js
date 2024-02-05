@@ -21,6 +21,7 @@ const todayAnalytic =
 };
 const weekAnalytic = {};
 const historyAnalytic = {};
+const removedBlockedWebsites = [];
 let blockedWebsites = [];
 let firstWebsiteVisited = null;
 
@@ -253,9 +254,42 @@ const HandleAddBlockedDom = async() => {
     }
 };
 
+// Update popup.html to reflect unblocked doms.
+const HandleRemovedBlockedDoms = async () => {
+    blockedWebsites = blockedWebsites.filter((dom) => !removedBlockedWebsites.includes(dom));
+    removedBlockedWebsites.splice(0, removedBlockedWebsites.length);
+
+    await SetToSync("blockedWebsites", blockedWebsites)
+
+    UpdateBlockedWebsitesDisplay();
+}
+
+// Update display to show blocked websites.
+const UpdateBlockedWebsitesDisplay = () => {
+    const buttonColor = "rgb(" + 0 + ", " + 153 + ", " + 255 + ")";
+    const blockedDisplay = document.getElementById("blocked-doms-dropdown");
+    const blockedDomElems = blockedWebsites.map((dom) => {
+        const domain = CreateDefaultHTMLElement("button", "blocked-dom-button", null, dom);
+
+        domain.addEventListener("click", () => {
+            removedBlockedWebsites.includes(dom) ? removedBlockedWebsites.splice(removedBlockedWebsites.indexOf(dom), 1)
+                : removedBlockedWebsites.push(dom);
+
+            domain.style.backgroundColor = domain.style.backgroundColor === buttonColor 
+                ? "white" : buttonColor;
+        });
+
+        return domain;
+    });
+
+    ClearAllChildren(blockedDisplay);
+    AppendChildren(blockedDisplay, blockedDomElems);
+};
+
 // Populate the settings html.
 const PopulateSettingHTML = () => {
     UpdateActiveWebsite();
+    UpdateBlockedWebsitesDisplay();
     UpdateCurrentDisplay(viewIds.settings);
 };
 
@@ -267,7 +301,7 @@ const StartUp = async () => {
     const currentDateData = await GetFromLocal(currentDate);
 
     if (blocked && blocked.blockedWebsites) {
-        blockedWebsites = blocked.blockedWebsites;
+        blockedWebsites = blocked.blockedWebsites.sort((a, b) => a.localeCompare(b));
     };
 
     if (currentDateData && currentDateData[currentDate]) {
@@ -285,4 +319,5 @@ document.getElementById("Week").addEventListener("click", PopulateTodayHTML());
 document.getElementById("History").addEventListener("click", PopulateTodayHTML());
 document.getElementById("Settings").addEventListener("click", () => PopulateSettingHTML());
 document.getElementById("addBlocked").addEventListener("click", () => HandleAddBlockedDom());
+document.getElementById("remove-blocked-doms").addEventListener("click", () => HandleRemovedBlockedDoms());
 

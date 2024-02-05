@@ -51,7 +51,7 @@ const UpdateActiveTab = async () => {
     if (!currentTab || currentTab.url.length === 0) {
         console.warn("Warning: Could not get active tab: ", currentTab);
         return;
-    } else if (blockedWebsites.find((website) => website.url === newTabUrl)) {
+    } else if (blockedWebsites.find((website) => website.url === currentTab.url)) {
         console.warn("Website blocked by user");
         return;
     };

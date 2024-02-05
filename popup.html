@@ -30,7 +30,7 @@
         <div class="all-websites-intro">Viewed Websites</div>
         <span class="vertical-spacer"></span>
         <div class="websites-container" id="visitedToday">
-            <div class="viewed-website">No viewed websites</div>
+            <div class="viewed-website-placeholder">None.</div>
         </div>
     </div>
     <div class="current-display" id="display-settings">
@@ -41,8 +41,13 @@
             <button class="add-block-button" id="addBlocked">Submit</button>
             <div class="verification-message" id="add-verify">Nothing</div>
         </div>
+        <span class="large-vertical-spacer"></span>
+        <div class="blocked-doms" id="blocked">
+            <div class="blocked-doms-intro">Current Blocked Domains</div>
+            <div class="dropdown" id="blocked-doms-dropdown"></div>
+        </div>
         <span class="vertical-spacer"></span>
-        <div class="blocked-doms" id="blocked"></div>
+        <button class="removal" id="remove-blocked-doms">Remove Selected Doms From Blocked</button>
     </div>
     <script src='popup.js'></script>
 </body>
