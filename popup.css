@@ -50,7 +50,6 @@ body {
 .current-display {
     height: 100%;
     width: 100%;
-    margin: 1%;
 }
 
 .verification-message {
@@ -120,9 +119,12 @@ body {
 }
 
 .websites-container {
-    height: 60%;
+    height: 100%;
     width: 100%;
     overflow-y: auto;
+    border-style: solid;
+    background-color: floralwhite;
+
 }
 
 .viewed-website-placeholder {
@@ -135,13 +137,64 @@ body {
 
 .viewed-website {
     height: fit-content;
-    width: 100%;
+    width: 96%;
     display: inline-block;
     text-align: center;
     font-size: large;
-    text-decoration: underline;
-    word-spacing: 100px;
     margin: 1% 1% 1% 1%;
+    background-color: peachpuff;
+    border: black;
+    border-style: solid;
+    border-width: medium;
+    text-decoration: underline;
+}
+
+.viewed-website-dropdown-off {
+    display: none;
+    font-weight: bold;
+}
+
+.viewed-website-dropdown-on {
+    display: block;
+    font-weight: bold;
+}
+
+.website-information {
+    display: block;
+}
+
+/* Week Styles */
+
+#display-week {
+    display: none;
+}
+
+.websites-container-week {
+    height: 35%;
+    width: 100%;
+    overflow-y: auto;
+    border-style: solid;
+    background-color: floralwhite;
+}
+
+.top-active-time-websites {
+    text-align: center;
+    font-size: large;
+    font-family: sans-serif;
+}
+
+#mostActive {
+
+}
+
+.most-visited-websites {
+    text-align: center;
+    font-size: large;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+#mostVisited {
+
 }
 
 /* Setting Styles */

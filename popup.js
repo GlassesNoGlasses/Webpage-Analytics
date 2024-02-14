@@ -19,7 +19,10 @@ const todayAnalytic =
     activeWebsiteDom: null,
     visitedWebsites: []
 };
-const weekAnalytic = {};
+const weekAnalytic = {
+
+    // websites : {totalActiveTime: n, totalTimesVisited: m, Saturday: {activeTime: x, numVisited: y}}
+};
 const historyAnalytic = {};
 const removedBlockedWebsites = [];
 let blockedWebsites = [];
@@ -43,7 +46,7 @@ const GetDomName = (url) => {
     };
 };
 
-// Compare active times of website
+// Compare active times of websites in descending order.
 const CompareActiveTimes = (web1, web2) => {
     if (web2.activeTime < web1.activeTime) {
         return -1;
@@ -51,7 +54,17 @@ const CompareActiveTimes = (web1, web2) => {
         return 1;
     };
     return 0;
-}
+};
+
+// Compare active times of websites in descending order.
+const CompareNumVisited = (web1, web2) => {
+    if (web2.numVisited < web1.numVisited) {
+        return -1;
+    } else if (web2.numVisited > web1.numVisited) {
+        return 1;
+    };
+    return 0;
+};
 
 // Get from local storage of key "localKey"
 const GetFromLocal = async (localKey) => {
@@ -152,6 +165,23 @@ const AppendChildren = (element, children) => {
     });
 };
 
+// Fetch all analytics for the week
+const GetDaysOfWeek = () => {
+    const weekInfo = [];
+    const date = new Date();
+    let startIndex = date.getUTCDay() === 0 ? 6 : date.getUTCDay();
+
+    while (startIndex >=0) {
+        const prevDate = new Date();
+
+        prevDate.setDate(date.getDate() - startIndex);
+        weekInfo.push(prevDate.toDateString());
+        startIndex--;
+    };
+    
+    return weekInfo;
+};
+
 // SECTION: TO HTML FUNCTIONS
 
 // Update active website information.
@@ -172,17 +202,35 @@ const UpdateActiveWebsite = () => {
     activeTimeElement.textContent = "Total Active Time: " + activeTime.toString() + "m";
 };
 
-// Converts array of websites to HTML div with class class.
-const WebsitesToHtml = (websites, className) => {
+const WebsiteHTMLInfo = (domain, activeTime, numVisited) => {
+    const timeDisplay = `Active Time: ${activeTime}m`;
+    const visitedDisplay = `Times Visited: ${numVisited}`;
+    const viewedWebsite = CreateDefaultHTMLElement("button", "viewed-website", null);
+    const viewedWebsiteDropdown = CreateDefaultHTMLElement("div", "viewed-website-dropdown-off");
+
+    viewedWebsiteDropdown.appendChild(CreateDefaultHTMLElement("span", "website-information", null, timeDisplay));
+    viewedWebsiteDropdown.appendChild(CreateDefaultHTMLElement("span", "website-information", null, visitedDisplay));
+    viewedWebsite.appendChild(CreateDefaultHTMLElement("span", null, null, domain + " v"));
+    viewedWebsite.appendChild(viewedWebsiteDropdown);
+    
+    viewedWebsite.addEventListener("click", () => {
+        viewedWebsite.lastChild.className = viewedWebsite.lastChild.className === "viewed-website-dropdown-off" 
+            ? "viewed-website-dropdown-on" : "viewed-website-dropdown-off";
+    });
+
+    return viewedWebsite;
+}
+
+// Converts array of websites to HTML.
+const WebsitesToHtml = (websites) => {
     return websites.map((website) => {
         const time = GetActiveTime(website.domain);
 
         if (!time && time !== 0) return null;
 
-        const textContent = (website.domain instanceof Object ? firstWebsiteVisited : website.domain)
-            + " " + time.toString() + "m";
+        const domain = (website.domain instanceof Object ? firstWebsiteVisited : website.domain);
 
-        return CreateDefaultHTMLElement("div", className, null, textContent);
+        return WebsiteHTMLInfo(domain, time, website.numVisited);
     });
 };
 
@@ -210,7 +258,7 @@ const UpdateTodayVisitedWebsites = () => {
     const unblockedWebsites = todayAnalytic.visitedWebsites.filter((website) => 
         !blockedWebsites.includes(website.domain)
     );
-    const updatedVisited = WebsitesToHtml(unblockedWebsites, "viewed-website");
+    const updatedVisited = WebsitesToHtml(unblockedWebsites);
 
     if (updatedVisited.length !== 0) {
         ClearAllChildren(visitedToday);
@@ -225,6 +273,7 @@ const PopulateTodayHTML = () => {
     UpdateTodayVisitedWebsites();
     UpdateCurrentDisplay(viewIds.today);
 };
+
 
 // SUBSECTION: SETTINGS DISPLAY
 
@@ -293,6 +342,81 @@ const PopulateSettingHTML = () => {
     UpdateCurrentDisplay(viewIds.settings);
 };
 
+// SUBSECTION: WEEK DISPLAY
+
+// Set weeklyAnalytic with date "date" information.
+const SetAnalyticToWeekly = (dateAnalytic, date) => {
+    if (!dateAnalytic || !date || !(date in dateAnalytic)) return;
+
+    dateAnalytic[date].visitedWebsites.forEach((website) => {
+        if (website.domain in weekAnalytic) {
+            weekAnalytic[website.domain][date] = 
+                {activeTime: website.activeTime, numVisited: website.numVisited};
+            weekAnalytic[website.domain].totalActiveTime += website.activeTime;
+            weekAnalytic[website.domain].totalNumVisited += website.numVisited;
+        } else {
+            const websiteInfo = {};
+            websiteInfo["totalActiveTime"] = website.activeTime;
+            websiteInfo["totalNumVisited"] = website.numVisited;
+            websiteInfo[date] = {activeTime: website.activeTime, numVisited: website.numVisited};
+
+            weekAnalytic[website.domain] = websiteInfo;
+        }
+    });
+}
+
+// Updates weekly analytics information.
+const UpdateWeeklyAnalytics = (DaysOfWeek) => {
+    if (!DaysOfWeek) return;
+
+    DaysOfWeek.forEach(async (date) => {
+        const dateAnalytic = await GetFromLocal(date);
+
+        SetAnalyticToWeekly(dateAnalytic, date);
+    });
+};
+
+// Updates weekly analytics html.
+const UpdateWeekHTML = () => {
+    // TODO: Modify return value to allow WebsitesToHTML to be callable.
+    const mostActive = document.getElementById('mostActive');
+    const mostVisited = document.getElementById('mostVisited');
+    const weekArray = Array.from(Object.keys(weekAnalytic).map((dom) => {
+        return {
+            domain: dom,
+            activeTime: weekAnalytic[dom].totalActiveTime,
+            numVisited: weekAnalytic[dom].totalNumVisited
+        };
+    }));
+
+    const rawActiveWebsites = [...weekArray].sort(CompareActiveTimes);
+    const rawVisitedWebsites = [...weekArray].sort(CompareNumVisited);
+    const mostActiveWebsites = WebsitesToHtml(rawActiveWebsites);
+    const mostVisitedWebsites = WebsitesToHtml(rawVisitedWebsites);
+
+    if (mostActiveWebsites.length > 0) {
+        ClearAllChildren(mostActive);
+    };
+
+    if (mostVisitedWebsites.length > 0) {
+        ClearAllChildren(mostVisited);
+    };
+
+    AppendChildren(mostActive, mostActiveWebsites);
+    AppendChildren(mostVisited, mostVisitedWebsites);
+};
+
+// Populate week html.
+const PopulateWeekHTML = async() => {
+    UpdateActiveWebsite();
+    
+    const DaysOfWeek = GetDaysOfWeek();
+    UpdateWeeklyAnalytics(DaysOfWeek);
+    UpdateWeekHTML();
+    UpdateCurrentDisplay(viewIds.weekly);
+};
+
+
 // SECTION: Startup Functions
 
 // Starts up and fills popup.html with information.
@@ -315,8 +439,8 @@ StartUp();
 
 // Button click listeners.
 document.getElementById("Today").addEventListener("click", () => PopulateTodayHTML());
-document.getElementById("Week").addEventListener("click", PopulateTodayHTML());
-document.getElementById("History").addEventListener("click", PopulateTodayHTML());
+document.getElementById("Week").addEventListener("click", () => PopulateWeekHTML());
+document.getElementById("History").addEventListener("click", () => PopulateTodayHTML());
 document.getElementById("Settings").addEventListener("click", () => PopulateSettingHTML());
 document.getElementById("addBlocked").addEventListener("click", () => HandleAddBlockedDom());
 document.getElementById("remove-blocked-doms").addEventListener("click", () => HandleRemovedBlockedDoms());
