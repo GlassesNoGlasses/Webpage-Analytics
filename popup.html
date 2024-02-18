@@ -34,13 +34,22 @@
         </div>
     </div>
     <div class="current-display" id="display-weekly">
-        <div class="top-active-time-websites">Top Active Time Websites.</div>
+        <div id="top-websites">Top Websites</div>
         <span class="vertical-spacer"></span>
+        <div class="dropdown">
+            <label class="filter-label" for="filter-options">Filter By:</label>
+            <select name="filters" id="weekly-filter-options">
+                <option value="alphabetically">Alphabetically</option>
+                <option value="active-time">Active Time</option>
+                <option value="num-visited">Times Visited</option>
+            </select>
+        </div>
+        <div class="websites-container-week" id="alphabetical-weekly">
+            <div class="viewed-website-placeholder">None.</div>
+        </div>
         <div class="websites-container-week" id="mostActive">
             <div class="viewed-website-placeholder">None.</div>
         </div>
-        <div class="most-visited-websites">Most Visited Websites.</div>
-        <span class="vertical-spacer"></span>
         <div class="websites-container-week" id="mostVisited">
             <div class="viewed-website-placeholder">None.</div>
         </div>

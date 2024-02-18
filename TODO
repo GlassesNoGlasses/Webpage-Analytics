@@ -17,6 +17,8 @@ popup.js
 DONE 1. Check chrome.storage changes variable is correct.
 2. Implement weekly analytic object.
     a. Update html style for visited websites to button with span text.
+    b. TO PONDER: Should you instead have a sorting function for UI; sort by active time or num visited?
+    c. Sort alphabetically by domain names.
 3. Implement Analytics history object (i.e. total runtime on chrome, etc.).
 
 
