@@ -1,23 +1,97 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" type="text/css" rel="noopener" target="_blank" href="popup.css">
     <title>Website Analytics</title>
 </head>
+
 <body>
     <div class="nav-bar">
         <div class="nav-list">
-            <button>B1</button>
-            <button>B2</button>
-            <button>B3</button>
-            <button>B3</button>
+            <button class="nav-button" id="Today">Today</button>
+            <button class="nav-button" id="Week">Week</button>
+            <button class="nav-button" id="History">History</button>
+            <button class="nav-button" id="Settings">Settings</button>
         </div>
     </div>
-    <div class="active-website">Hello</div>
+    <span class="vertical-spacer"></span>
+    <div class="active-website-container">
+        <div class="active-website-intro">Current Active Website:</div>
+        <span class="vertical-spacer"></span>
+        <div class="active-website-dom" id="activeWebDom">No current active website</div>
+        <span class="large-vertical-spacer"></span>
+        <div class="active-time" id="activeTime">Total Active Time: N/A</div>
+    </div>
+    <span class="vertical-spacer"></span>
+    <div class="current-display" id="display-today">
+        <div class="all-websites-intro">Viewed Websites</div>
+        <span class="vertical-spacer"></span>
+        <div class="websites-container" id="visitedToday">
+            <div class="viewed-website-placeholder">None.</div>
+        </div>
+    </div>
+    <div class="current-display" id="display-weekly">
+        <div id="top-websites">Top Websites</div>
+        <span class="vertical-spacer"></span>
+        <div class="dropdown">
+            <label class="filter-label" for="filter-options">Filter By:</label>
+            <select name="filters" id="weekly-filter-options">
+                <option value="alphabetically">Alphabetically</option>
+                <option value="active-time">Active Time</option>
+                <option value="num-visited">Times Visited</option>
+            </select>
+        </div>
+        <div class="websites-container-week" id="alphabetical-weekly">
+            <div class="viewed-website-placeholder">None.</div>
+        </div>
+        <div class="websites-container-week" id="mostActive-weekly">
+            <div class="viewed-website-placeholder">None.</div>
+        </div>
+        <div class="websites-container-week" id="mostVisited-weekly">
+            <div class="viewed-website-placeholder">None.</div>
+        </div>
+    </div>
+    <div class="current-display" id="display-history">
+        <div id="top-websites">Your History</div>
+        <span class="vertical-spacer"></span>
+        <div class="dropdown">
+            <label class="filter-label" for="filter-options">Filter By:</label>
+            <select name="filters" id="history-filter-options">
+                <option value="alphabetically">Alphabetically</option>
+                <option value="active-time">Active Time</option>
+                <option value="num-visited">Times Visited</option>
+            </select>
+        </div>
+        <div class="websites-container-history" id="alphabetical-history">
+            <div class="viewed-website-placeholder">None.</div>
+        </div>
+        <div class="websites-container-history" id="mostActive-history">
+            <div class="viewed-website-placeholder">None.</div>
+        </div>
+        <div class="websites-container-history" id="mostVisited-history">
+            <div class="viewed-website-placeholder">None.</div>
+        </div>
+    </div>
+    <div class="current-display" id="display-settings">
+        <div class="add-blocked-dom" id="add-blocked">
+            <div class="add-title">Add Domains to Block.</div>
+            <input type="text" id="blocked-input" placeholder="Add domain or url to block..."/>
+            <span class="large-vertical-spacer"></span>
+            <button class="add-block-button" id="addBlocked">Submit</button>
+            <div class="verification-message" id="add-verify">Nothing</div>
+        </div>
+        <span class="large-vertical-spacer"></span>
+        <div class="blocked-doms" id="blocked">
+            <div class="blocked-doms-intro">Current Blocked Domains</div>
+            <div class="dropdown-blocked" id="blocked-doms-dropdown"></div>
+        </div>
+        <span class="vertical-spacer"></span>
+        <button class="removal" id="remove-blocked-doms">Remove Selected Doms From Blocked</button>
+    </div>
+    <script src='popup.js'></script>
 </body>
-</html>
 
-<script src="popupHelper.js"></script>
-<script src='popup.js'></script>
+</html>

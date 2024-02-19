@@ -1,49 +1,26 @@
 
-import { DateAnalytic, webConstants, SetToLocal, GetFromLocal, ClearLocalStorage } from "./constants.js";
+import { DateAnalytic, GetDomName, SetToLocal, 
+    GetFromLocal, WebsiteAnalytic, GetFromSync} from "./constants.js";
 
-console.log("hiii");
-
-// SECTION: Helper Functions
-const Debugger = (actual, expected)  => {
-    console.log("==============DEBUGGING==================");
-    console.warn("Actual Value: " + actual);
-    console.log("Expected Value: " + expected);
-    console.log("==============END-DEBUGGING==============");
-};
-
-// Get dom name
-const GetDomName = (url) => {
-    try {
-        const rawDomain = url.slice(url.indexOf(webConstants.urlPrefix) + webConstants.urlPrefix.length);
-        return rawDomain.indexOf(webConstants.urlSuffix) !== -1 ? rawDomain.slice(0, rawDomain.indexOf(webConstants.urlSuffix)) : rawDomain; 
-    } catch (error) {
-        console.warn("Error: Could not find domain of : ", url);
-        return null;
-    };
-};
-
-const SetTodayAnalytic = async() => {
+const SetTodayAnalytic = async () => {
     const currentDateData = await GetFromLocal(currentDate);
 
-    if (Object.keys(currentDateData).length === 0) {
-        InitializeDate(currentDate);
+    if (!currentDateData || Object.keys(currentDateData).length === 0) {
+        await InitializeDate(currentDate);
         return;
     }
 
     todayAnalytic.SetVisited(currentDateData[currentDate].visitedWebsites);
-
-    console.log("Fetched From Local: ", currentDateData);
-    console.log("New TodayAnalytic: ", todayAnalytic);
 };
 
 // SECTION: Storage Functions
-const UpdateActiveWebsiteTime = (activeWebUrl) => {
+const UpdateActiveWebsiteTime = async (activeWebUrl) => {
     const webDom = GetDomName(activeWebUrl);
     const currTime = new Date().getTime();
 
-    todayAnalytic.UpdateActiveWebsite(webDom, currTime);
-    
-    SetToLocal(currentDate, todayAnalytic);
+    todayAnalytic.UpdateActiveWebsite(new WebsiteAnalytic(webDom, currTime), currTime);
+
+    await SetToLocal(currentDate, todayAnalytic.SerializeToObject()); // store to local
 };
 
 // SECTION: Active Tab / Update
@@ -62,29 +39,31 @@ const UpdateActiveTab = async () => {
     const currentTab = await GetRecentActiveTab();
 
     if (!currentTab || currentTab.url.length === 0) {
-        console.error("Error: Could not get active tab: ", currentTab);
-        return false;
+        console.warn("Warning: Could not get active tab: ", currentTab);
+        return;
+    } else if (blockedWebsites.find((website) => website.url === currentTab.url)) {
+        console.warn("Website blocked by user");
+        return;
     };
 
     ClearWebsiteInterval();
-
-    console.log("FETCHED TAB: ", currentTab);
-
-    UpdateActiveWebsiteTime(currentTab.url);
-    console.log("ACTIVE TAB UPDATED TO: ", todayAnalytic);
-
+    await UpdateActiveWebsiteTime(currentTab.url);
     CreateWebsiteInterval(currentTab.url);
-    return true;
+
+    return;
 };
 
 // Handle updating analytic upon url change of current tab
-const TabUpdateHandler = (changeInfo) => {
+const TabUpdateHandler = async (changeInfo) => {
     const newTabUrl = changeInfo.url;
 
     if (newTabUrl) {
         ClearWebsiteInterval();
-        UpdateActiveWebsiteTime(newTabUrl);
-        CreateWebsiteInterval(newTabUrl);
+
+        if (!blockedWebsites.find((website) => website.url === newTabUrl)) {
+            await UpdateActiveWebsiteTime(newTabUrl);
+            CreateWebsiteInterval(newTabUrl);
+        }
     };
 };
 
@@ -92,9 +71,8 @@ const TabUpdateHandler = (changeInfo) => {
 // in intervals of TAB_AUTO_UPDATE_TIME
 const CreateWebsiteInterval = (activeWebUrl) => {
     if (activeWebUrl && !interval) {
-        console.log("CREATING INTERVAL FOR: ", activeWebUrl);
-        interval = setInterval(() => {
-            UpdateActiveWebsiteTime(activeWebUrl);
+        interval = setInterval(async () => {
+            await UpdateActiveWebsiteTime(activeWebUrl);
         }, TAB_AUTO_UPDATE_TIME);
     };
 };
@@ -102,7 +80,6 @@ const CreateWebsiteInterval = (activeWebUrl) => {
 // Clear existing interval for auto update
 const ClearWebsiteInterval = () => {
     if (interval) {
-        console.log("REMOVING INTERVAL");
         clearInterval(interval);
         interval = null;
     };
@@ -111,58 +88,40 @@ const ClearWebsiteInterval = () => {
 
 // SECTION: To Popup
 
-// Send message/data to popup.js
-const SendToPopup = async (popupData) => {
-
-};
-
 // SECTION: Constants/Vars Used
-const TAB_AUTO_UPDATE_TIME = 5000// 120000; // 2 minutes
+const TAB_AUTO_UPDATE_TIME = 6000;
 const currentDate = new Date().toDateString();
 const todayAnalytic = new DateAnalytic(currentDate);
+let blockedWebsites = [];
 let interval = null;
 
 // SECTION: Startup Functions
 
 // Initialize todayAnalytic Object if not in local storage
-const InitializeDate = (currentDate) => {
-    console.log("initializing date");
+const InitializeDate = async (currentDate) => {
     const dateInfo = new DateAnalytic(currentDate);
 
-    SetToLocal(currentDate, dateInfo);
+    await SetToLocal(currentDate, dateInfo.SerializeToObject());
 };
 
-
+// Starts up background.js
 const StartUp = async () => {
-    ClearLocalStorage();
+    const blockedData = await GetFromSync("blockedWebsites");
+
+    if (blockedData && blockedData.blockedWebsites) {
+        blockedWebsites = blockedData.blockedWebsites;
+    };
 
     await SetTodayAnalytic();
 };
 
-chrome.storage.onChanged.addListener((changes, namespace) => {
-    console.log(changes, namespace);
-
-    switch (namespace) {
-        case "local":
-            () => SetTodayAnalytic();
-            break;
-        
-        case "sync":
-            break;
-    
-        default:
-            break;
-    }
-});
-
 // Updates analytic upon active tab change
-chrome.tabs.onActivated.addListener(() => {UpdateActiveTab()});
+chrome.tabs.onActivated.addListener(async () => { await UpdateActiveTab() });
 
 // Updates analytic current tab url change
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
     TabUpdateHandler(changeInfo);
 });
-
 
 StartUp();
 

@@ -1,13 +1,11 @@
 
 // SECTION: Constant vars
-
 export const webConstants = {
     urlPrefix: "://",
     urlSuffix: "/"
 };
 
 // SECTION: Classes
-
 class Session {
     session = { startTime: null, endTime: null };
 
@@ -36,6 +34,10 @@ class Session {
             return Math.max(0, this.session.endTime - this.session.startTime);
         };
     };
+
+    GetPropsAsObject() {
+        return this.session;
+    }
 
     ClearSession() {
         this.session.startTime = null;
@@ -67,7 +69,7 @@ export class WebsiteAnalytic {
     EndSession(endTime) {
         const currEndTime = endTime ? endTime : new Date().getTime()
 
-        this.currentSession.SetEndTime(endTime);
+        this.currentSession.SetEndTime(currEndTime);
     };
 
     RestartSession(startTime) {
@@ -75,7 +77,7 @@ export class WebsiteAnalytic {
         this.currentSession.SetStartTime(startTime ? startTime : new Date().getTime());
     };
 
-    UpdateActiveTime(endTime = null, isStillActive = false) {
+    UpdateActiveTime(endTime = null) {
         this.EndSession(endTime);
         this.activeTime += this.currentSession.GetSessionTime();
 
@@ -85,6 +87,16 @@ export class WebsiteAnalytic {
     IncrementVisitedCount() {
         this.numVisited += 1;
     };
+
+    GetPropsAsObject() {
+        return {
+            domain: this.domain,
+            startTime: this.startTime,
+            currentSession: this.currentSession.GetPropsAsObject(),
+            numVisited: this.numVisited,
+            activeTime: this.activeTime
+        };
+    }
 };
 
 export class DateAnalytic {
@@ -114,10 +126,12 @@ export class DateAnalytic {
 
     SetVisited(visitedWebsites) {
         if (visitedWebsites.length !== 0) {
-            this.visitedWebsites = structuredClone(visitedWebsites.map((web) => {
+            this.visitedWebsites = visitedWebsites.map((web) => {
+                const session = new Session(web.currentSession.startTime, web.currentSession.endTime);
                 return web instanceof WebsiteAnalytic ? web : 
-                new WebsiteAnalytic(web.domain, web.startTime, web.currentSession, web.endTime, web.numVisited, web.activeTime);
-            }));
+                new WebsiteAnalytic(web.domain, web.startTime, 
+                    session, web.endTime, web.numVisited, web.activeTime);
+            });
         };
     };
 
@@ -127,6 +141,7 @@ export class DateAnalytic {
         if (!(website instanceof WebsiteAnalytic)) {
             console.error("Error: added website is not of class: WebsiteAnalytic");
         } else if (!webFound) {
+            console.log("pushing");
             this.visitedWebsites.push(website);
         };
     };
@@ -135,69 +150,68 @@ export class DateAnalytic {
         this.visitedWebsites = this.visitedWebsites.filter((web) => web.domain !== website.domain);
     };
 
-    // UpdateWebsiteEndtime(website, endtime) {
-    //     const webIndex = this.GetWebsite(website);
-
-    //     if (webIndex && webIndex !== -1) {
-    //         this.visitedWebsites[webIndex].UpdateScreenTime(endtime);
-    //     };
-    // };
-
     GetActiveWebsite() {
         return this.GetWebsite(undefined, this.activeWebsiteDom);
     };
 
-    UpdateActiveWebsiteSession(endTime, webDom) {
+    UpdateActiveWebsiteSession(endTime, website) {
         if (this.activeWebsiteDom) {
             const previousActiveWebsite = this.GetActiveWebsite();
-
-            console.log("PREV ACTIVE WEB: ", previousActiveWebsite);
-            previousActiveWebsite.UpdateActiveTime(endTime, this.activeWebsiteDom.localeCompare(webDom) === 0);
+            previousActiveWebsite.UpdateActiveTime(endTime);
         };
     };
 
-    UpdateActiveWebsite(webDom, time) {
-        if (!webDom) return;
-
+    UpdateActiveWebsite(website, time) {
+        if (!website || !(website instanceof WebsiteAnalytic)) return;
 
         // if an active website not set, AddWebsite() called only.
         // else: update session/active time of previous activeDom, add new activeDom, set it.
-        this.UpdateActiveWebsiteSession(time, webDom);
-        this.AddWebsite(new WebsiteAnalytic(webDom, time));
+        this.AddWebsite(website);
 
-        this.activeWebsiteDom = webDom;
+        if (website.domain.localeCompare(this.activeWebsiteDom) !== 0) {
+            this.GetWebsite(website).IncrementVisitedCount();
+        }
+
+        this.UpdateActiveWebsiteSession(time, website);
+        this.activeWebsiteDom = website.domain;
 
         const currentActiveWebsite = this.GetActiveWebsite();
-        currentActiveWebsite.IncrementVisitedCount();
         currentActiveWebsite.RestartSession(time);
+    };
+
+    SerializeToObject() {
+        return {
+            currentDate: this.currentDate,
+            activeWebsiteDom: this.activeWebsiteDom,
+            visitedWebsites: this.visitedWebsites
+            .filter((website) => website !== null)
+            .map((website) => {return website.GetPropsAsObject()}),
+        };
     };
 };
 
 
 // SECTION: Functions
 
-// Checks if targetDate is later than currDate
-const IsLaterDate = (currDate, targetDate) => {
-    const utc1 = Date.UTC(currDate.getYear(), currDate.getMonth(), currDate.getDate(), currDate.getHours(), currDate.getMinutes());
-    const utc2 = Date.UTC(targetDate.getYear(), targetDate.getMonth(), targetDate.getDate(), targetDate.getHours(), targetDate.getMinutes());
-
-    return Math.abs(targetDate) - Math.abs(currDate) > 0;
+// Get dom name
+export const GetDomName = (url) => {
+    try {
+        const rawDomain = url.slice(url.indexOf(webConstants.urlPrefix) + webConstants.urlPrefix.length);
+        return rawDomain.indexOf(webConstants.urlSuffix) !== -1 ?
+        rawDomain.slice(0, rawDomain.indexOf(webConstants.urlSuffix)) : rawDomain;
+    } catch (error) {
+        console.warn("Error: Could not find domain of : ", url);
+        return null;
+    };
 };
 
 // Set to local storage {localKey : val}
-export const SetToLocal = (localKey, val) => {
+export const SetToLocal = async (localKey, val) => {
     const obj = {};
     obj[localKey] = val;
+    console.log("trying to set to local storage obj: ", obj);
 
-    chrome.storage.local.set(obj).then((succ, rej) => {
-        if (rej) {
-            console.warn("Error: Could not save key ", localKey, " to local storage");
-            return false;
-        } else {
-            console.log("Key: ", localKey, " is set to Value: ", val);
-            return true;
-        };
-    });
+    await chrome.storage.local.set(obj);
 };
 
 // Get from local storage of key "localKey"
@@ -220,4 +234,17 @@ export const ClearLocalStorage = (callback = null) => {
         });
     };
 };
+
+// Get from sync storage with key "key".
+export const GetFromSync = async (key) => {
+    const data = await chrome.storage.sync.get(key);
+
+    if(!data) {
+        console.warn("Error: Failed to retrive local dateAnalyticData for: ", key);
+        return null;
+    };
+
+    return data;
+};
+
 

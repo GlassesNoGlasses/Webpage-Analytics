@@ -1,36 +1,294 @@
 
+/* General */
+
 html {
     height: 500px;
     width: 350px;
-};
+}
 
 .main-title {
     background-color: aqua;
-};
+}
 
 body {
-
+    height: 100%;
+    width: 100%;
+    margin: 0;
 }
 
 .nav-bar {
-    height: fit-content;
-    width: fit-content;
+    height: 7%;
+    width: 100%;
     display: inline-flex;
-    position: fixed;
     flex-direction: row;
     justify-content: center;
     align-items: center;
     background-color: grey;
-};
-
-.nav-list {
 }
 
+.nav-list {
+    height: 100%;
+    width: 100%;
+    display: inline-flex;
+    justify-content: space-evenly;
+}
 
-.active-website {
-    text-align: center;
+.nav-button {
+    width: 25%;
+    border: 1px solid skyblue;
+    border-top: 0px;
+    border-left: 0px;
+    border-right-width: thin;
+    border-bottom-width: medium;
+}
+
+.nav-button:hover {
+    filter: brightness(125%);
+    background-color: skyblue;
+}
+
+.current-display {
+    height: 100%;
+    width: 100%;
+}
+
+.verification-message {
+    font-size: medium;
     font-style: italic;
-    font-size: xx-large;
+    color: lightgreen;
+    display: none;
+}
+
+/* Spacers  */
+
+.vertical-spacer {
+    display: block;
+    height: 1%;
+    width: 100%;
+}
+
+.large-vertical-spacer {
+    display: block;
+    height: 10%;
+    width: 100%;
+}
+
+/* Active website view */
+
+.active-website-container {
+    height: 20%;
+    width: 100%;
+    text-align: center;
+    background-color: antiquewhite;
+    border-color: beige;
+    border-style: groove;
+    border-width: thick;
+    border-left: none;
+}
+
+.active-website-intro {
+    height: fit-content;
+    width: 100%;
+    font-size: x-large;
+    text-decoration: underline;
+}
+
+.active-website-dom {
+    height: fit-content;
+    width: 100%;
+    font-size: large;
+}
+
+.active-time {
+    height: fit-content;
+    width: 100%;
+    font-size: large;
+}
+
+/* Today Analytic Styles */
+
+#display-today {
+    display: block;
+}
+
+.all-websites-intro {
+    height: fit-content;
+    width: 100%;
+    text-align: center;
+    font-size: x-large;
+}
+
+.websites-container {
+    height: 100%;
+    width: 100%;
+    overflow-y: auto;
+    border-style: solid;
+    background-color: floralwhite;
+
+}
+
+.viewed-website-placeholder {
+    height: fit-content;
+    width: 100%;
+    display: block;
+    text-align: center;
+    font-size: large;
+}
+
+.viewed-website {
+    height: fit-content;
+    width: 96%;
+    display: inline-block;
+    text-align: center;
+    font-size: large;
+    margin: 1% 1% 1% 1%;
+    background-color: peachpuff;
+    border: black;
+    border-style: solid;
+    border-width: medium;
+    text-decoration: underline;
+}
+
+.viewed-website-dropdown-off {
+    display: none;
+    font-weight: bold;
+}
+
+.viewed-website-dropdown-on {
+    display: block;
+    font-weight: bold;
+}
+
+.website-information {
+    display: block;
+}
+
+/* Week Styles */
+
+#display-week {
+    display: none;
+}
+
+.websites-container-week {
+    height: 100%;
+    width: 100%;
+    overflow-y: auto;
+    border-style: solid;
+    background-color: floralwhite;
+}
+
+#top-websites {
+    text-align: center;
+    font-size: large;
+    font-family: sans-serif;
+}
+
+#alphabetical-weekly {
+    display: block;
+}
+
+#mostActive-weekly {
+    display: none;
+}
+
+#mostVisited-weekly {
+    display: none;
+}
+
+/* History Styles */
+
+#display-history {
+    display: none;
+}
+
+.websites-container-history {
+    height: 100%;
+    width: 100%;
+    overflow-y: auto;
+    border-style: solid;
+    background-color: gainsboro;
+}
+
+#alphabetical-history {
+    display: block;
+}
+
+#mostActive-history {
+    display: none;
+}
+
+#mostVisited-history {
+    display: none;
+}
+
+/* Setting Styles */
+
+#display-settings {
+    display: none;
+}
+
+.add-blocked-dom {
+    height: 17%;
+    width: 100%;
+    display: inline-block;
+}
+
+.add-title {
+    font-size: x-large;
+    text-align: center;
+}
+
+#blocked-input {
+    width: 96%;
+}
+
+#addBlocked {
+    width: 50%;
+    display: flex;
+    justify-content: center;
+}
+
+.blocked-doms {
+    height: 50%;
+    width: 95%;
+    display: block;
+    border: aqua;
+    border-style: groove;
+    border-width: thick;
+}
+
+.blocked-doms-intro {
+    text-align: center;
+    font-size: x-large;
+    border: black;
+    border-style: solid;
+    border-width: thin;
+    background-color: antiquewhite;
+}
+
+.dropdown {
+    height: 5%;
+    width: 100%;
+    display: block;
+    overflow-y: auto;
+}
+
+.dropdown-blocked {
+    height: fit-content;
+    width: 100%;
+    display: block;
+    overflow-y: auto;
+}
+
+.blocked-dom-button {
+    width: 100%;
+    display: block;
+    background-color: white;
+}
+
+.blocked-dom-button:hover {
+    filter: brightness(110%);
+    background-color: rgb(0, 153, 255) !important;
 }
 
 

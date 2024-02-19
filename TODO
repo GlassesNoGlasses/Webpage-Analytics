@@ -1,16 +1,28 @@
 
 all
-1. blocked websites list
-2. Create personal settings for popup
+DONE 1. blocked websites list
+DONE 2. Create personal settings for popup
 DONE 3. Create Debugger functions
 DONE 4. Migrate content.js
 5. Figure out how to store weekly/monthly analytics data
+    a. Finish FetchWeekAnalytics
 DONE 6. Implement numVisited in WebsiteAnalytic
 DONE 7. FIX endTime of sessions not showing up
 
 popup.html
 1. Create design
-    a. 
+    a.
+
+popup.js
+DONE 1. Check chrome.storage changes variable is correct.
+DONE 2. Implement weekly analytic object.
+    a. Update html style for visited websites to button with span text.
+    b. TO PONDER: Should you instead have a sorting function for UI; sort by active time or num visited?
+    c. Sort alphabetically by domain names.
+3. Implement Analytics history object (i.e. total runtime on chrome, etc.).
+
+
+-----------------DONE------------------
 
 background.js
 DONE 1. Set up objects and storage for websites
