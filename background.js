@@ -1,14 +1,6 @@
 
 import { DateAnalytic, GetDomName, SetToLocal, 
-    GetFromLocal, ClearLocalStorage, WebsiteAnalytic, GetFromSync} from "./constants.js";
-
-// SECTION: Helper Functions
-const Debugger = (actual, expected) => {
-    console.log("==============DEBUGGING==================");
-    console.warn("Actual Value: " + actual);
-    console.log("Expected Value: " + expected);
-    console.log("==============END-DEBUGGING==============");
-};
+    GetFromLocal, WebsiteAnalytic, GetFromSync} from "./constants.js";
 
 const SetTodayAnalytic = async () => {
     const currentDateData = await GetFromLocal(currentDate);
@@ -18,9 +10,7 @@ const SetTodayAnalytic = async () => {
         return;
     }
 
-    console.log("Fetched from Local: ", currentDateData);
     todayAnalytic.SetVisited(currentDateData[currentDate].visitedWebsites);
-    console.log("New TodayAnalytic: ", todayAnalytic);
 };
 
 // SECTION: Storage Functions
@@ -55,8 +45,6 @@ const UpdateActiveTab = async () => {
         console.warn("Website blocked by user");
         return;
     };
-
-    console.log("New Active Tab: ", currentTab);
 
     ClearWebsiteInterval();
     await UpdateActiveWebsiteTime(currentTab.url);
@@ -101,7 +89,7 @@ const ClearWebsiteInterval = () => {
 // SECTION: To Popup
 
 // SECTION: Constants/Vars Used
-const TAB_AUTO_UPDATE_TIME = 5000// 120000; // 2 minutes
+const TAB_AUTO_UPDATE_TIME = 6000;
 const currentDate = new Date().toDateString();
 const todayAnalytic = new DateAnalytic(currentDate);
 let blockedWebsites = [];
@@ -118,13 +106,11 @@ const InitializeDate = async (currentDate) => {
 
 // Starts up background.js
 const StartUp = async () => {
-    //ClearLocalStorage();
     const blockedData = await GetFromSync("blockedWebsites");
 
     if (blockedData && blockedData.blockedWebsites) {
         blockedWebsites = blockedData.blockedWebsites;
     };
-
 
     await SetTodayAnalytic();
 };
@@ -136,23 +122,6 @@ chrome.tabs.onActivated.addListener(async () => { await UpdateActiveTab() });
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
     TabUpdateHandler(changeInfo);
 });
-
-// DEPRECATED
-// // Recieves messages from popup.js for data
-// chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-//     (async () => {
-//         const response = { data: null };
-
-//         if (request && request.from && request.reason) {
-//             if (request.from === "popup.js" && request.reason === "startup") {
-//                 response.data = await GetFromLocal(currentDate);
-//             }
-//         }
-//         sendResponse(response);
-//     })();
-//     return true;
-// });
-
 
 StartUp();
 

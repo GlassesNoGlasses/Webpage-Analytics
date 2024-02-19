@@ -47,10 +47,31 @@
         <div class="websites-container-week" id="alphabetical-weekly">
             <div class="viewed-website-placeholder">None.</div>
         </div>
-        <div class="websites-container-week" id="mostActive">
+        <div class="websites-container-week" id="mostActive-weekly">
             <div class="viewed-website-placeholder">None.</div>
         </div>
-        <div class="websites-container-week" id="mostVisited">
+        <div class="websites-container-week" id="mostVisited-weekly">
+            <div class="viewed-website-placeholder">None.</div>
+        </div>
+    </div>
+    <div class="current-display" id="display-history">
+        <div id="top-websites">Your History</div>
+        <span class="vertical-spacer"></span>
+        <div class="dropdown">
+            <label class="filter-label" for="filter-options">Filter By:</label>
+            <select name="filters" id="history-filter-options">
+                <option value="alphabetically">Alphabetically</option>
+                <option value="active-time">Active Time</option>
+                <option value="num-visited">Times Visited</option>
+            </select>
+        </div>
+        <div class="websites-container-history" id="alphabetical-history">
+            <div class="viewed-website-placeholder">None.</div>
+        </div>
+        <div class="websites-container-history" id="mostActive-history">
+            <div class="viewed-website-placeholder">None.</div>
+        </div>
+        <div class="websites-container-history" id="mostVisited-history">
             <div class="viewed-website-placeholder">None.</div>
         </div>
     </div>
@@ -65,7 +86,7 @@
         <span class="large-vertical-spacer"></span>
         <div class="blocked-doms" id="blocked">
             <div class="blocked-doms-intro">Current Blocked Domains</div>
-            <div class="dropdown" id="blocked-doms-dropdown"></div>
+            <div class="dropdown-blocked" id="blocked-doms-dropdown"></div>
         </div>
         <span class="vertical-spacer"></span>
         <button class="removal" id="remove-blocked-doms">Remove Selected Doms From Blocked</button>

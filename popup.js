@@ -29,10 +29,11 @@ const historyAnalytic = {
 const removedBlockedWebsites = [];
 let blockedWebsites = [];
 let firstWebsiteVisited = null;
+const buttonColor = "rgb(" + 0 + ", " + 153 + ", " + 255 + ")";
 
 // SECTION: Helper Functions
 
-// Get dom name
+// Get dom name from url.
 const GetDomName = (url) => {
     try {
         if (url.indexOf(webConstants.urlPrefix) < 0) {
@@ -48,6 +49,7 @@ const GetDomName = (url) => {
     };
 };
 
+// Compare website domain names in alphabetical order.
 const CompareDomNames = (web1, web2) => {
     return web1.domain.localeCompare(web2.domain);
 }
@@ -113,8 +115,6 @@ const SetTodayAnalytic = (currentDateData) => {
 
     firstWebsiteVisited = todayAnalytic.visitedWebsites.length > 0 ?
         todayAnalytic.visitedWebsites[0].domain : null;
-
-    console.log("POPUP: ", todayAnalytic)
 };
 
 // Convert miliseconds to minutes.
@@ -177,7 +177,7 @@ const GetDaysOfWeek = () => {
     const date = new Date();
     let startIndex = date.getUTCDay() === 0 ? 6 : date.getUTCDay();
 
-    while (startIndex >=0) {
+    while (startIndex >= 0) {
         const prevDate = new Date();
 
         prevDate.setDate(date.getDate() - startIndex);
@@ -186,6 +186,18 @@ const GetDaysOfWeek = () => {
     };
     
     return weekInfo;
+};
+
+// Update websites sorting options with id "htmlID".
+const PostOptionSorting = (htmlID, sortCallback, filteredWebsites) => {
+    const sortingDiv = document.getElementById(htmlID);
+    const rawSortedWebsites = [...filteredWebsites].sort(sortCallback);
+    const sortedWebsites = WebsitesToHtml(rawSortedWebsites);
+    
+    if (sortedWebsites.length) {
+        ClearAllChildren(sortingDiv);
+        AppendChildren(sortingDiv, sortedWebsites);
+    };
 };
 
 // SECTION: TO HTML FUNCTIONS
@@ -216,7 +228,7 @@ const WebsiteHTMLInfo = (domain, activeTime, numVisited) => {
 
     viewedWebsiteDropdown.appendChild(CreateDefaultHTMLElement("span", "website-information", null, timeDisplay));
     viewedWebsiteDropdown.appendChild(CreateDefaultHTMLElement("span", "website-information", null, visitedDisplay));
-    viewedWebsite.appendChild(CreateDefaultHTMLElement("span", null, null, domain + " v"));
+    viewedWebsite.appendChild(CreateDefaultHTMLElement("span", null, null, domain));
     viewedWebsite.appendChild(viewedWebsiteDropdown);
     
     viewedWebsite.addEventListener("click", () => {
@@ -321,7 +333,6 @@ const HandleRemovedBlockedDoms = async () => {
 
 // Update display to show blocked websites.
 const UpdateBlockedWebsitesDisplay = () => {
-    const buttonColor = "rgb(" + 0 + ", " + 153 + ", " + 255 + ")";
     const blockedDisplay = document.getElementById("blocked-doms-dropdown");
     const blockedDomElems = blockedWebsites.map((dom) => {
         const domain = CreateDefaultHTMLElement("button", "blocked-dom-button", null, dom);
@@ -350,26 +361,28 @@ const PopulateSettingHTML = () => {
 
 // SUBSECTION: WEEK DISPLAY
 
-// Set weeklyAnalytic with date "date" information.
-const SetAnalyticToWeekly = (dateAnalytic, date) => {
+// Sets targetAnalytic with date "date" information from respective dateAnalytic.
+const SetAllDateAnalytic = (dateAnalytic, date, targetAnalytic) => {
     if (!dateAnalytic || !date || !(date in dateAnalytic)) return;
 
     dateAnalytic[date].visitedWebsites.forEach((website) => {
-        if (website.domain in weekAnalytic) {
-            weekAnalytic[website.domain][date] = 
-                {activeTime: website.activeTime, numVisited: website.numVisited};
-            weekAnalytic[website.domain].totalActiveTime += website.activeTime;
-            weekAnalytic[website.domain].totalNumVisited += website.numVisited;
-        } else {
-            const websiteInfo = {};
-            websiteInfo["totalActiveTime"] = website.activeTime;
-            websiteInfo["totalNumVisited"] = website.numVisited;
-            websiteInfo[date] = {activeTime: website.activeTime, numVisited: website.numVisited};
-
-            weekAnalytic[website.domain] = websiteInfo;
-        }
+        if (!blockedWebsites.includes(website.domain)) {
+            if (website.domain in targetAnalytic) {
+                targetAnalytic[website.domain][date] = 
+                    {activeTime: website.activeTime, numVisited: website.numVisited};
+                targetAnalytic[website.domain].totalActiveTime += website.activeTime;
+                targetAnalytic[website.domain].totalNumVisited += website.numVisited;
+            } else {
+                const websiteInfo = {};
+                websiteInfo["totalActiveTime"] = website.activeTime;
+                websiteInfo["totalNumVisited"] = website.numVisited;
+                websiteInfo[date] = {activeTime: website.activeTime, numVisited: website.numVisited};
+    
+                targetAnalytic[website.domain] = websiteInfo;
+            };
+        };
     });
-}
+};
 
 // Updates weekly analytics information.
 const UpdateWeeklyAnalytics = async (DaysOfWeek) => {
@@ -377,15 +390,12 @@ const UpdateWeeklyAnalytics = async (DaysOfWeek) => {
 
     for (const date of DaysOfWeek) {
         const dateAnalytic = await GetFromLocal(date);
-        SetAnalyticToWeekly(dateAnalytic, date);
-    }
+        SetAllDateAnalytic(dateAnalytic, date, weekAnalytic);
+    };
 };
 
 // Updates weekly analytics html.
 const UpdateWeekHTML = () => {
-    const alphabetical = document.getElementById('alphabetical-weekly');
-    const mostActive = document.getElementById('mostActive');
-    const mostVisited = document.getElementById('mostVisited');
     const weekArray = Array.from(Object.keys(weekAnalytic).map((dom) => {
         return {
             domain: dom,
@@ -398,43 +408,18 @@ const UpdateWeekHTML = () => {
         !blockedWebsites.includes(website.domain)
     );
 
-    const rawAlphabeticalWebsites = [...filteredWeekArray].sort(CompareDomNames);
-    const rawActiveWebsites = [...filteredWeekArray].sort(CompareActiveTimes);
-    const rawVisitedWebsites = [...filteredWeekArray].sort(CompareNumVisited);
-
-    const alphabeticalWebsites = WebsitesToHtml(rawAlphabeticalWebsites);
-    const mostActiveWebsites = WebsitesToHtml(rawActiveWebsites);
-    const mostVisitedWebsites = WebsitesToHtml(rawVisitedWebsites);
-
-    console.log(rawAlphabeticalWebsites)
-    console.log(rawActiveWebsites)
-    console.log(rawVisitedWebsites)
-
-
-    if (alphabeticalWebsites.length > 0) {
-        ClearAllChildren(alphabetical);
-    };
-
-    if (mostActiveWebsites.length > 0) {
-        ClearAllChildren(mostActive);
-    };
-
-    if (mostVisitedWebsites.length > 0) {
-        ClearAllChildren(mostVisited);
-    };
-
-    AppendChildren(alphabetical, alphabeticalWebsites);
-    AppendChildren(mostActive, mostActiveWebsites);
-    AppendChildren(mostVisited, mostVisitedWebsites);
+    PostOptionSorting('alphabetical-weekly', CompareDomNames, filteredWeekArray);
+    PostOptionSorting('mostActive-weekly', CompareActiveTimes, filteredWeekArray);
+    PostOptionSorting('mostVisited-weekly', CompareNumVisited, filteredWeekArray);
 };
 
-//
+// Handle filter changes for weekly analytic doms.
 const HandleWeekFilterChange = (option) => {
     try {
         const optionValue = option.target.value;
         const alphabeticalContainer = document.getElementById("alphabetical-weekly");
-        const activeContainer = document.getElementById("mostActive");
-        const visitedContainer = document.getElementById("mostVisited");
+        const activeContainer = document.getElementById("mostActive-weekly");
+        const visitedContainer = document.getElementById("mostVisited-weekly");
 
         switch (optionValue) {
             case "alphabetically":
@@ -454,7 +439,7 @@ const HandleWeekFilterChange = (option) => {
                 break;
             default:
                 break;
-        }
+        };
         
     } catch (error) {
         console.warn("Error Switching Weekly Filters: ", error);
@@ -473,10 +458,64 @@ const PopulateWeekHTML = async () => {
 
 // SUBSECTION: Historical Analysis.
 
+const HandleHistoryFilterChange = (option) => {
+    try {
+        const optionValue = option.target.value;
+        const alphabeticalContainer = document.getElementById("alphabetical-history");
+        const activeContainer = document.getElementById("mostActive-history");
+        const visitedContainer = document.getElementById("mostVisited-history");
+
+        switch (optionValue) {
+            case "alphabetically":
+                alphabeticalContainer.style.display = "block";
+                activeContainer.style.display = "none";
+                visitedContainer.style.display = "none";
+                break;
+            case "active-time":
+                alphabeticalContainer.style.display = "none";
+                activeContainer.style.display = "block";
+                visitedContainer.style.display = "none";
+                break;
+            case "num-visited":
+                alphabeticalContainer.style.display = "none";
+                activeContainer.style.display = "none";
+                visitedContainer.style.display = "block";
+                break;
+            default:
+                break;
+        };
+        
+    } catch (error) {
+        console.warn("Error Switching Weekly Filters: ", error);
+    };
+};
+
 // Updates const historyAnalytics with user history.
 const UpdateHistoryAnalytics = async () => {
-    // Get everything from storage.
-    // Update historyAnalytics with that information.
+    // Get all date analytics from storage.
+    const allFetchedAnalytics = await GetFromLocal(null);
+    Object.keys(allFetchedAnalytics).forEach((date) => {
+        SetAllDateAnalytic(allFetchedAnalytics, date, historyAnalytic);
+    });
+};
+
+// Updates history HTML.
+const UpdateHistoryHTML = () => {
+    const historyArray = Array.from(Object.keys(historyAnalytic).map((dom) => {
+        return {
+            domain: dom,
+            activeTime: historyAnalytic[dom].totalActiveTime,
+            numVisited: historyAnalytic[dom].totalNumVisited
+        };
+    }));
+
+    const filteredHistoryArray = historyArray.filter((website) =>
+        !blockedWebsites.includes(website.domain)
+    );
+
+    PostOptionSorting('alphabetical-history', CompareDomNames, filteredHistoryArray);
+    PostOptionSorting('mostActive-history', CompareActiveTimes, filteredHistoryArray);
+    PostOptionSorting('mostVisited-history', CompareNumVisited, filteredHistoryArray);
 };
 
 // Populates history html.
@@ -484,11 +523,12 @@ const PopulateHistoryHTML = async() => {
     UpdateActiveWebsite();
 
     await UpdateHistoryAnalytics();
+    UpdateHistoryHTML();
+    UpdateCurrentDisplay(viewIds.history);
 };
 
 
 // SECTION: Startup Functions
-
 // Starts up and fills popup.html with information.
 const StartUp = async () => {
     const blocked = await GetFromSync("blockedWebsites");
@@ -514,6 +554,6 @@ document.getElementById("History").addEventListener("click", () => PopulateHisto
 document.getElementById("Settings").addEventListener("click", () => PopulateSettingHTML());
 document.getElementById("addBlocked").addEventListener("click", () => HandleAddBlockedDom());
 document.getElementById("remove-blocked-doms").addEventListener("click", () => HandleRemovedBlockedDoms());
-
 document.getElementById("weekly-filter-options").onchange = (event) => HandleWeekFilterChange(event);
+document.getElementById("history-filter-options").onchange = (event) => HandleHistoryFilterChange(event);
 
