@@ -537,6 +537,7 @@ const UpdateBlockedWebsitesDisplay = () => {
 // Handler for adding new blocked dom to storage.
 const HandleAddLimitedDoms = async() => {
     const input = document.getElementById("limited-input");
+    const hours = document.getElementById("hours");
 
     try {
         const verificationMessage = document.getElementById("limited-verify");
@@ -547,7 +548,8 @@ const HandleAddLimitedDoms = async() => {
             verificationMessage.style.color = "red";
         } else {
             if (!limitedWebsites.find((dom) => dom === limitedDom)) {
-                limitedWebsites.push(limitedDom);
+                limitedWebsites.push({domain: limitedDom, hours: hours.value});
+                console.log(limitedWebsites)
             };
 
             await SetToSync("limitedWebsites", limitedWebsites);
@@ -573,8 +575,8 @@ const HandleRemovedLimitedDoms = async () => {
 // Update limited website time display.
 const UpdateLimitedTimeDisplay = () => {
     const limitedDisplays = document.getElementById("limited-doms-dropdown");
-    const limitedDomElems = blockedWebsites.map((dom) => {
-        const domain = CreateDefaultHTMLElement("button", "blocked-dom-button", null, dom);
+    const limitedDomElems = limitedWebsites.map((dom) => {
+        const domain = CreateDefaultHTMLElement("button", "limited-dom-button", null, dom);
 
         domain.addEventListener("click", () => {
             removedLimitedWebsites.includes(dom) ? removedLimitedWebsites.splice(removedLimitedWebsites.indexOf(dom), 1)
