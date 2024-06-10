@@ -76,12 +76,12 @@
         </div>
     </div>
     <div class="current-display" id="display-settings">
-        <div class="add-blocked-dom" id="add-blocked">
+        <div class="add-dom" id="add-blocked">
             <div class="add-title">Add Domains to Block.</div>
             <input type="text" id="blocked-input" placeholder="Add domain or url to block..."/>
             <span class="large-vertical-spacer"></span>
-            <button class="add-block-button" id="addBlocked">Submit</button>
-            <div class="verification-message" id="add-verify">Nothing</div>
+            <button class="add-button" id="add-blocked-button">Submit</button>
+            <div class="verification-message" id="blocked-verify">Nothing</div>
         </div>
         <span class="large-vertical-spacer"></span>
         <div class="blocked-doms" id="blocked">
@@ -90,6 +90,21 @@
         </div>
         <span class="vertical-spacer"></span>
         <button class="removal" id="remove-blocked-doms">Remove Selected Doms From Blocked</button>
+
+        <div class="add-dom" id="add-limited">
+            <div class="add-title">Add Time Limit to Domains</div>
+            <input type="text" id="limited-input" placeholder="Add domain or url to limit..."/>
+            <span class="large-vertical-spacer"></span>
+            <button class="add-button" id="add-limited-button">Submit</button>
+            <div class="verification-message" id="limited-verify">Nothing</div>
+        </div>
+        <span class="large-vertical-spacer"></span>
+        <div class="blocked-doms" id="blocked">
+            <div class="blocked-doms-intro">Current Limited Domains</div>
+            <div class="dropdown-blocked" id="limited-doms-dropdown"></div>
+        </div>
+        <span class="vertical-spacer"></span>
+        <button class="removal" id="remove-limited-doms">Remove Selected Doms From Time Limit</button>
     </div>
     <script src='popup.js'></script>
 </body>

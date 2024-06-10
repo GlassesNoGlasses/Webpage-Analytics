@@ -1,4 +1,12 @@
 
+// SECTION: Classes
+class LimitedDom {
+    constructor(domain, hours) {
+        this.domain = domain;
+        this.hours = hours;
+    }
+}
+
 // SECTION: Constants
 const webConstants = {
     urlPrefix: "://",
@@ -27,7 +35,9 @@ const historyAnalytic = {
     // 
 };
 const removedBlockedWebsites = [];
+const removedLimitedWebsites = [];
 let blockedWebsites = [];
+let limitedWebsites = [];
 let firstWebsiteVisited = null;
 const buttonColor = "rgb(" + 0 + ", " + 153 + ", " + 255 + ")";
 
@@ -292,73 +302,6 @@ const PopulateTodayHTML = () => {
     UpdateCurrentDisplay(viewIds.today);
 };
 
-
-// SUBSECTION: SETTINGS DISPLAY
-
-// Handler for adding new blocked dom to storage.
-const HandleAddBlockedDom = async() => {
-    const input = document.getElementById("blocked-input");
-
-    try {
-        const verificationMessage = document.getElementById("add-verify");
-        const blockedDom = GetDomName(input.value).trim();
-
-        if (!blockedDom || blockedDom.length < 4) {
-            verificationMessage.textContent = `* Could not get dom of blocked url added: ${blockedDom}`;
-            verificationMessage.style.color = "red";
-        } else {
-            if (!blockedWebsites.find((dom) => dom === blockedDom)) {
-                blockedWebsites.push(blockedDom);
-            };
-
-            await SetToSync("blockedWebsites", blockedWebsites);
-            verificationMessage.textContent = `Sucessfully added ${blockedDom}.`
-        };
-
-        verificationMessage.style.display = "flex";
-    } catch (error) {
-        console.error(error);
-    }
-};
-
-// Update popup.html to reflect unblocked doms.
-const HandleRemovedBlockedDoms = async () => {
-    blockedWebsites = blockedWebsites.filter((dom) => !removedBlockedWebsites.includes(dom));
-    removedBlockedWebsites.splice(0, removedBlockedWebsites.length);
-
-    await SetToSync("blockedWebsites", blockedWebsites)
-
-    UpdateBlockedWebsitesDisplay();
-}
-
-// Update display to show blocked websites.
-const UpdateBlockedWebsitesDisplay = () => {
-    const blockedDisplay = document.getElementById("blocked-doms-dropdown");
-    const blockedDomElems = blockedWebsites.map((dom) => {
-        const domain = CreateDefaultHTMLElement("button", "blocked-dom-button", null, dom);
-
-        domain.addEventListener("click", () => {
-            removedBlockedWebsites.includes(dom) ? removedBlockedWebsites.splice(removedBlockedWebsites.indexOf(dom), 1)
-                : removedBlockedWebsites.push(dom);
-
-            domain.style.backgroundColor = domain.style.backgroundColor === buttonColor 
-                ? "white" : buttonColor;
-        });
-
-        return domain;
-    });
-
-    ClearAllChildren(blockedDisplay);
-    AppendChildren(blockedDisplay, blockedDomElems);
-};
-
-// Populate the settings html.
-const PopulateSettingHTML = () => {
-    UpdateActiveWebsite();
-    UpdateBlockedWebsitesDisplay();
-    UpdateCurrentDisplay(viewIds.settings);
-};
-
 // SUBSECTION: WEEK DISPLAY
 
 // Sets targetAnalytic with date "date" information from respective dateAnalytic.
@@ -527,15 +470,149 @@ const PopulateHistoryHTML = async() => {
     UpdateCurrentDisplay(viewIds.history);
 };
 
+// SUBSECTION: SETTINGS DISPLAY
+
+// -----------------------Blocked Websites-----------------------
+
+// Handler for adding new blocked dom to storage.
+const HandleAddBlockedDom = async() => {
+    const input = document.getElementById("blocked-input");
+
+    try {
+        const verificationMessage = document.getElementById("blocked-verify");
+        const blockedDom = GetDomName(input.value).trim();
+
+        if (!blockedDom || blockedDom.length < 4) {
+            verificationMessage.textContent = `* Could not get dom of blocked url added: ${blockedDom}`;
+            verificationMessage.style.color = "red";
+        } else {
+            if (!blockedWebsites.find((dom) => dom === blockedDom)) {
+                blockedWebsites.push(blockedDom);
+            };
+
+            await SetToSync("blockedWebsites", blockedWebsites);
+            verificationMessage.textContent = `Sucessfully added ${blockedDom}.`
+        };
+
+        verificationMessage.style.display = "flex";
+    } catch (error) {
+        console.error(error);
+    }
+};
+
+// Update popup.html to reflect unblocked doms.
+const HandleRemovedBlockedDoms = async () => {
+    blockedWebsites = blockedWebsites.filter((dom) => !removedBlockedWebsites.includes(dom));
+    removedBlockedWebsites.splice(0, removedBlockedWebsites.length);
+
+    await SetToSync("blockedWebsites", blockedWebsites)
+
+    UpdateBlockedWebsitesDisplay();
+}
+
+// Update display to show blocked websites.
+const UpdateBlockedWebsitesDisplay = () => {
+    const blockedDisplay = document.getElementById("blocked-doms-dropdown");
+    const blockedDomElems = blockedWebsites.map((dom) => {
+        const domain = CreateDefaultHTMLElement("button", "blocked-dom-button", null, dom);
+
+        domain.addEventListener("click", () => {
+            removedBlockedWebsites.includes(dom) ? removedBlockedWebsites.splice(removedBlockedWebsites.indexOf(dom), 1)
+                : removedBlockedWebsites.push(dom);
+
+            domain.style.backgroundColor = domain.style.backgroundColor === buttonColor 
+                ? "white" : buttonColor;
+        });
+
+        return domain;
+    });
+
+    ClearAllChildren(blockedDisplay);
+    AppendChildren(blockedDisplay, blockedDomElems);
+};
+
+
+// -----------------------Limited Websites-----------------------
+
+// Handler for adding new blocked dom to storage.
+const HandleAddLimitedDoms = async() => {
+    const input = document.getElementById("limited-input");
+
+    try {
+        const verificationMessage = document.getElementById("limited-verify");
+        const limitedDom = GetDomName(input.value).trim();
+
+        if (!limitedDom || limitedDom.length < 4) {
+            verificationMessage.textContent = `* Could not get dom of limited url added: ${limitedDom}`;
+            verificationMessage.style.color = "red";
+        } else {
+            if (!limitedWebsites.find((dom) => dom === limitedDom)) {
+                limitedWebsites.push(limitedDom);
+            };
+
+            await SetToSync("limitedWebsites", limitedWebsites);
+            verificationMessage.textContent = `Sucessfully added ${limitedDom}.`
+        };
+
+        verificationMessage.style.display = "flex";
+    } catch (error) {
+        console.error(error);
+    }
+};
+
+// Update popup.html to reflect delimited doms.
+const HandleRemovedLimitedDoms = async () => {
+    limitedWebsites = limitedWebsites.filter((dom) => !removedLimitedWebsites.includes(dom));
+    removedLimitedWebsites.splice(0, removedLimitedWebsites.length);
+
+    await SetToSync("limitedWebsites", limitedWebsites)
+
+    UpdateLimitedTimeDisplay();
+}
+
+// Update limited website time display.
+const UpdateLimitedTimeDisplay = () => {
+    const limitedDisplays = document.getElementById("limited-doms-dropdown");
+    const limitedDomElems = blockedWebsites.map((dom) => {
+        const domain = CreateDefaultHTMLElement("button", "blocked-dom-button", null, dom);
+
+        domain.addEventListener("click", () => {
+            removedLimitedWebsites.includes(dom) ? removedLimitedWebsites.splice(removedLimitedWebsites.indexOf(dom), 1)
+                : removedLimitedWebsites.push(dom);
+
+            domain.style.backgroundColor = domain.style.backgroundColor === buttonColor 
+                ? "white" : buttonColor;
+        });
+
+        return domain;
+    });
+
+    ClearAllChildren(limitedDisplays);
+    AppendChildren(limitedDisplays, limitedDomElems);
+};
+
+// Populate the settings html.
+const PopulateSettingHTML = () => {
+    UpdateActiveWebsite();
+    UpdateBlockedWebsitesDisplay();
+    UpdateLimitedTimeDisplay();
+    UpdateCurrentDisplay(viewIds.settings);
+};
+
 
 // SECTION: Startup Functions
 // Starts up and fills popup.html with information.
 const StartUp = async () => {
     const blocked = await GetFromSync("blockedWebsites");
+    const limited = await GetFromSync("limitedWebsites");
     const currentDateData = await GetFromLocal(currentDate);
 
     if (blocked && blocked.blockedWebsites) {
         blockedWebsites = blocked.blockedWebsites.sort((a, b) => a.localeCompare(b));
+    };
+
+    if (limited && limited.limitedWebsites) {
+        limitedWebsites = limited.limitedWebsites.sort((a, b) => a.domain.localeCompare(b.domain));
     };
 
     if (currentDateData && currentDateData[currentDate]) {
@@ -552,8 +629,10 @@ document.getElementById("Today").addEventListener("click", () => PopulateTodayHT
 document.getElementById("Week").addEventListener("click", () => PopulateWeekHTML());
 document.getElementById("History").addEventListener("click", () => PopulateHistoryHTML());
 document.getElementById("Settings").addEventListener("click", () => PopulateSettingHTML());
-document.getElementById("addBlocked").addEventListener("click", () => HandleAddBlockedDom());
+document.getElementById("add-blocked-button").addEventListener("click", () => HandleAddBlockedDom());
 document.getElementById("remove-blocked-doms").addEventListener("click", () => HandleRemovedBlockedDoms());
+document.getElementById("add-limited-button").addEventListener("click", () => HandleAddLimitedDoms());
+document.getElementById("remove-limited-doms").addEventListener("click", () => HandleRemovedLimitedDoms());
 document.getElementById("weekly-filter-options").onchange = (event) => HandleWeekFilterChange(event);
 document.getElementById("history-filter-options").onchange = (event) => HandleHistoryFilterChange(event);
 
